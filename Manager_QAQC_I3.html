@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manager, QA | QC</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gd:#165C38;--gm:#1B7A4A;--gl:#E8F5EF;--gb:#A8D5BC;
+  --bg:#F5F6F8;--sur:#FFFFFF;--bdr:#E4E7EC;--blt:#F0F2F5;
+  --tx:#111827;--sub:#4B5563;--mu:#9CA3AF;
+  --red:#B91C1C;--rl:#FEF2F2;--rb:#FECACA;
+  --amb:#92400E;--al:#FFFBEB;--ab:#FDE68A;
+  --bl:#1E40AF;--bll:#EFF6FF;--blb:#BFDBFE;
+  --pu:#5B21B6;--pul:#F5F3FF;--pub:#DDD6FE;
+  --sw:52px;--th:52px;
+  --f:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  --fm:'Menlo','Consolas','Courier New',monospace;
+  --r:6px;--rl2:10px;
+  --sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shl:0 8px 24px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.06);
+}
+html,body{height:100%;font-family:var(--f);font-size:13px;color:var(--tx);background:var(--bg);line-height:1.5;overflow:hidden}
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sb{width:var(--sw);flex-shrink:0;background:var(--gd);display:flex;flex-direction:column;align-items:center;padding:12px 0;z-index:100}
+.sb-logo{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;margin-bottom:16px;letter-spacing:-1px}
+.sb-nav{flex:1;display:flex;flex-direction:column;gap:2px;width:100%;padding:0 8px;overflow-y:auto}
+.sbn{width:36px;height:36px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;cursor:pointer;color:rgba(255,255,255,.5);transition:background .12s,color .12s;position:relative;margin:0 auto;flex-shrink:0}
+.sbn:hover,.sbn.on{background:rgba(255,255,255,.15);color:#fff}
+.sbn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sbn::after{content:attr(data-l);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%);background:#1F2937;color:#F9FAFB;font-size:11px;white-space:nowrap;padding:4px 8px;border-radius:4px;pointer-events:none;opacity:0;transition:opacity .12s;z-index:200}
+.sbn:hover::after{opacity:1}
+.sb-sep{height:1px;background:rgba(255,255,255,.1);margin:8px 10px;flex-shrink:0}
+.sb-bot{padding:0 8px;flex-shrink:0}
+.sbn.has-dot::before{content:'';position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#34D399;border:1.5px solid var(--gd)}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:var(--th);flex-shrink:0;background:var(--sur);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:50}
+.tb-title{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.tb-right{display:flex;align-items:center;gap:10px}
+.badge{font-size:11px;font-weight:600;background:var(--gl);color:var(--gm);border:1px solid var(--gb);padding:3px 9px;border-radius:20px}
+.ht{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);cursor:pointer;user-select:none;padding:4px 8px;border-radius:var(--r);border:1px solid var(--bdr);background:var(--sur);transition:background .12s}
+.ht:hover{background:var(--bg)}
+.trk{width:28px;height:15px;border-radius:8px;background:#D1D5DB;position:relative;transition:background .2s;flex-shrink:0}
+.trk.on{background:var(--gm)}
+.knob{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:left .18s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.trk.on .knob{left:15px}
+.sync{font-size:11px;color:var(--mu);font-family:var(--fm)}
+
+/* CONTENT */
+.cnt{flex:1;overflow-y:auto;padding:20px}
+.panel{display:none}.panel.on{display:block}
+
+/* ALERT */
+.alrt{background:var(--al);border:1px solid var(--ab);border-radius:var(--r);padding:9px 14px;font-size:12px;color:var(--amb);display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;line-height:1.55}
+.alrt-i{flex-shrink:0;font-size:10px;font-weight:700;font-family:var(--fm);background:var(--ab);color:var(--amb);border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.alrt-blue{background:var(--bll);border-color:var(--blb);color:var(--bl)}.alrt-blue .alrt-i{background:var(--blb);color:var(--bl)}
+.alrt-pu{background:var(--pul);border-color:var(--pub);color:var(--pu)}.alrt-pu .alrt-i{background:var(--pub);color:var(--pu)}
+.alrt-g{background:var(--gl);border-color:var(--gb);color:var(--gd)}.alrt-g .alrt-i{background:var(--gb);color:var(--gd)}
+
+/* SECTION */
+.stl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--mu);display:flex;align-items:center;gap:8px;margin:20px 0 10px}
+.stl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.stl:first-child{margin-top:0}
+.stl-sub{font-size:11px;color:var(--mu);margin-left:4px;font-weight:400;text-transform:none;letter-spacing:0}
+
+/* KPI */
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl2);padding:14px 16px;cursor:default}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.kpi-ico{width:32px;height:32px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-tag{font-size:10px;font-weight:600;color:var(--mu);text-align:right;max-width:120px}
+.kpi-v{font-size:26px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;margin-bottom:4px}
+.kpi-l{font-size:10px;color:var(--mu);font-weight:500}
+.kpi-sr{display:flex;gap:10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--blt);flex-wrap:wrap}
+.kpi-si{font-size:10px;display:flex;align-items:center;gap:3px;color:var(--sub)}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px}
+.gwn{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+
+/* CARD */
+.card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl2);padding:16px}
+.chd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--blt);gap:10px}
+.ct{font-size:12px;font-weight:700;color:var(--tx)}
+.cm{font-size:11px;color:var(--mu);white-space:nowrap}
+
+/* BAR */
+.br{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.br:last-child{margin-bottom:0}
+.bl{font-size:11px;color:var(--sub);width:96px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt{flex:1;height:18px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--blt)}
+.bf{height:100%;border-radius:2px;display:flex;align-items:center;padding-left:6px;transition:width .3s}
+.bn{font-size:10px;font-weight:600;color:#fff;white-space:nowrap}
+.bv{font-size:11px;color:var(--sub);width:20px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.bar-empty{font-size:11px;color:var(--mu);padding:8px 0}
+
+/* BADGES */
+.bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.bp{background:var(--al);color:var(--amb);border:1px solid var(--ab)}
+.bm{background:var(--rl);color:var(--red);border:1px solid var(--rb)}
+.ba{background:var(--gl);color:var(--gm);border:1px solid var(--gb)}
+.br2{background:var(--rl);color:var(--red);border:1px solid var(--rb)}
+.bne{background:var(--rl);color:#7F1D1D;border:1px solid var(--rb)}
+.bnr{background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB}
+.bi{background:var(--bll);color:var(--bl);border:1px solid var(--blb)}
+.bpu{background:var(--pul);color:var(--pu);border:1px solid var(--pub)}
+
+/* AVATAR */
+.av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;text-transform:uppercase;letter-spacing:.3px}
+
+/* TABLE */
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--bdr)}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);padding:8px 10px;text-align:left;background:#FAFBFC;border-bottom:1px solid var(--bdr);white-space:nowrap;position:sticky;top:0;z-index:2}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--blt);vertical-align:middle;font-size:12px}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:#FAFBFC;cursor:pointer}
+.mono{font-family:var(--fm);font-size:11px}
+.fw6{font-weight:600}
+.tdn{display:flex;align-items:center;gap:8px}
+.tbl-empty-row td{text-align:center;color:var(--mu);padding:20px;cursor:default}
+
+/* HEAT */
+.hc{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl2);padding:14px;border-left:3px solid var(--rb)}
+.hn{font-size:12px;font-weight:700;margin-bottom:6px}
+.hnum{font-size:22px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums}
+.hpct{font-size:10px;color:var(--mu)}
+.hrs{margin-top:8px}
+.hr{font-size:11px;color:var(--sub);padding:2px 0 2px 10px;position:relative}
+.hr::before{content:'>';position:absolute;left:0;color:var(--red);font-size:10px;top:3px}
+.hex{margin-top:8px;font-size:10px;color:var(--mu);font-style:italic;background:var(--bg);padding:5px 8px;border-radius:4px;border:1px solid var(--blt);line-height:1.55}
+
+/* DSR */
+.dr{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--blt)}
+.dr:last-child{border-bottom:none}
+.dl{font-size:11px;color:var(--sub);width:160px;flex-shrink:0}
+.dtr{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;border:1px solid var(--blt)}
+.dfl{height:100%;border-radius:3px}
+.dv{font-size:11px;width:38px;text-align:right;flex-shrink:0;font-family:var(--fm);font-variant-numeric:tabular-nums}
+.db{width:72px;text-align:right;flex-shrink:0}
+
+/* PROD */
+.pc{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl2);overflow:hidden}
+.ph{background:#FAFBFC;border-bottom:1px solid var(--bdr);padding:10px 14px;display:flex;align-items:center;gap:10px}
+.pn{font-size:12px;font-weight:700}
+.pr{font-size:10px;color:var(--mu)}
+.pb{padding:12px 14px}
+.prow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--blt)}
+.prow:last-child{border-bottom:none}
+.pl{font-size:11px;color:var(--sub);flex:1}
+.pv{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;flex-shrink:0}
+.mb{width:48px;height:5px;background:var(--bg);border-radius:3px;overflow:hidden;flex-shrink:0}
+.mf{height:100%;border-radius:3px;background:var(--gm)}
+
+/* SENTIMENT */
+.sc{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl2);overflow:hidden;margin-bottom:10px}
+.sh{padding:10px 14px;background:#FAFBFC;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sfid{font-family:var(--fm);font-size:11px;color:var(--bl);font-weight:600}
+.sbdy{padding:12px 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sm{background:var(--bg);border-radius:var(--r);padding:9px 11px;border:1px solid var(--blt)}
+.sml{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;font-weight:600}
+.ssig{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* FILTER */
+.fr{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.fsel,.finp{background:var(--sur);border:1px solid var(--bdr);color:var(--tx);padding:5px 9px;border-radius:var(--r);font-size:12px;font-family:var(--f);outline:none;transition:border-color .12s}
+.fsel:focus,.finp:focus{border-color:var(--gm)}
+.flbl{font-size:11px;color:var(--mu)}
+
+/* REMARKS */
+.rmk{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;border-left:3px solid var(--blb)}
+.rmkm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.rmkid{font-family:var(--fm);font-size:11px;color:var(--bl);font-weight:600}
+.rmkdt{font-size:10px;color:var(--mu);margin-left:auto;font-family:var(--fm)}
+.rmkr{font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px}
+.rmkb{font-size:12px;color:var(--sub)}
+.kmnote{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:12px 14px;margin-bottom:8px;border-left:3px solid var(--pub)}
+
+/* TASK COMBO */
+.tc-chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:10px;font-weight:600;margin:2px;cursor:pointer;border:1px solid transparent;transition:all .12s}
+.tc-chip.farmer{background:#EFF6FF;color:#1E40AF;border-color:#BFDBFE}
+.tc-chip.farm{background:#F0FDF4;color:#166534;border-color:#BBF7D0}
+.tc-chip.crop{background:#FFF7ED;color:#9A3412;border-color:#FED7AA}
+.tc-chip.practice{background:var(--pul);color:var(--pu);border-color:var(--pub)}
+.tc-chip.other{background:#F3F4F6;color:#374151;border-color:#E5E7EB}
+.task-cb{display:none}
+.task-cb + .tc-chip{opacity:.45}
+.task-cb:checked + .tc-chip{opacity:1;box-shadow:0 0 0 1px currentColor}
+.task-sel{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:12px;padding:10px;background:var(--bg);border-radius:var(--r);border:1px solid var(--blt)}
+.combo-result{background:var(--gl);border:1px solid var(--gb);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--gd);font-weight:600;margin-bottom:10px;display:none}
+.combo-result.show{display:block}
+.log-entry{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.log-tasks{flex:1;font-size:11px;color:var(--sub);min-width:120px}
+.log-cat{font-size:11px;font-weight:600;color:var(--gm);flex-shrink:0}
+.log-dt{font-size:10px;color:var(--mu);flex-shrink:0;font-family:var(--fm)}
+.src-badge{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px;vertical-align:middle}
+.src-badge.live{background:var(--gl);color:var(--gm)}
+.src-badge.sample{background:#F3F4F6;color:#6B7280}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:var(--r);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--f);border:1px solid;transition:all .12s;white-space:nowrap}
+.btn-g{background:var(--gm);color:#fff;border-color:var(--gm)}.btn-g:hover{background:var(--gd)}
+.btn-o{background:var(--sur);color:var(--sub);border-color:var(--bdr)}.btn-o:hover{background:var(--bg);color:var(--tx)}
+.btn-sm{padding:3px 9px;font-size:10px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* MODAL */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:300;align-items:center;justify-content:center;padding:20px}
+.mov.open{display:flex}
+.modal{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl2);width:100%;max-width:860px;max-height:92vh;overflow-y:auto;box-shadow:var(--shl)}
+.mhd{position:sticky;top:0;background:var(--sur);border-bottom:1px solid var(--bdr);padding:14px 20px;display:flex;align-items:flex-start;justify-content:space-between;z-index:5}
+.mt{font-size:14px;font-weight:700}
+.ms{font-size:11px;color:var(--mu);margin-top:2px}
+.mc{background:none;border:none;cursor:pointer;color:var(--mu);font-size:18px;line-height:1;padding:2px 4px;border-radius:4px}
+.mc:hover{background:var(--bg);color:var(--tx)}
+.mbdy{padding:20px}
+.mfg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.mf{background:var(--bg);border-radius:var(--r);padding:9px 11px;border:1px solid var(--blt)}
+.mfl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);margin-bottom:3px}
+.mfv{font-size:12px;font-weight:600}
+.ckg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.ck{background:var(--bg);border-radius:var(--r);padding:9px 11px;border-left:3px solid var(--bdr)}
+.ck.sp{border-left-color:#FDE68A}.ck.sm{border-left-color:#FECACA}
+.ck.sa{border-left-color:#6EE7B7}.ck.sr{border-left-color:#FECACA}
+.ck.snr{border-left-color:#E5E7EB}
+.ckn{font-size:10px;color:var(--mu);margin-bottom:3px}
+.ckv{font-size:11px;font-weight:700}
+.kma{background:var(--bg);border:1px solid var(--bdr);border-radius:var(--r);padding:12px;margin-top:14px}
+.kmal{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:8px}
+.kmta{width:100%;background:var(--sur);border:1px solid var(--bdr);color:var(--tx);font-family:var(--f);font-size:12px;padding:8px 10px;border-radius:var(--r);resize:vertical;min-height:60px;outline:none;transition:border-color .12s}
+.kmta:focus{border-color:var(--gm)}
+.kmsv{font-size:11px;color:var(--gm);margin-left:8px;display:none}
+
+.tg{background:#FAFBFC;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);padding:6px 10px;border-top:1px solid var(--bdr)}
+
+/* DATA SOURCES PANEL */
+.dropzone{border:1.5px dashed var(--bdr);border-radius:var(--rl2);padding:26px;text-align:center;transition:border-color .12s,background .12s;margin-bottom:16px;cursor:pointer}
+.dropzone.drag{border-color:var(--gm);background:var(--gl)}
+.dz-icon{margin-bottom:8px;color:var(--mu)}
+.dz-text{font-size:13px;color:var(--sub);margin-bottom:4px}
+.dz-link{color:var(--gm);font-weight:700;text-decoration:underline;cursor:pointer}
+.dz-sub{font-size:11px;color:var(--mu)}
+.link-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.link-row .finp{flex:1;min-width:220px}
+.link-error{font-size:11px;color:var(--red);margin-bottom:10px;display:none;background:var(--rl);border:1px solid var(--rb);border-radius:var(--r);padding:8px 10px;line-height:1.5}
+.src-summary-strip{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.ss-item{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--r);padding:9px 14px;flex:1;min-width:140px}
+.ss-num{font-size:18px;font-weight:800;color:var(--gm);font-variant-numeric:tabular-nums}
+.ss-lbl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+
+/* HINT TOOLTIP - single shared, JS positioned */
+#shared-tip{
+  position:fixed;z-index:1000;max-width:230px;
+  background:#1F2937;color:#F9FAFB;font-size:11px;line-height:1.55;
+  padding:8px 10px;border-radius:6px;pointer-events:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.18);
+  opacity:0;transition:opacity .1s ease;
+  border-top:2px solid var(--gm);
+  top:-9999px;left:-9999px;
+}
+#shared-tip.show{opacity:1}
+body.hints .h{cursor:help}
+
+/* EMPTY STATE */
+.empty-banner{text-align:center;padding:36px 16px;color:var(--mu);font-size:12px;background:var(--sur);border:1px dashed var(--bdr);border-radius:var(--rl2);margin-bottom:14px}
+.empty-banner .btn{margin-top:10px}
+
+/* REPORT MODAL */
+.report-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--bdr);background:#FAFBFC}
+.report-controls .fsel{min-width:170px}
+#report-output{padding:20px}
+.rpt-card{page-break-inside:avoid}
+
+/* INSIGHT CARD */
+.insight-card{background:linear-gradient(135deg,var(--gl) 0%,#fff 100%);border:1px solid var(--gb);border-radius:var(--rl2);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px}
+.insight-ico{width:38px;height:38px;border-radius:50%;background:var(--gm);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;font-weight:800}
+.insight-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gd)}
+.insight-val{font-size:18px;font-weight:800;color:var(--tx);margin-top:2px}
+.insight-sub{font-size:11px;color:var(--sub);margin-top:2px}
+
+/* EXPAND TOGGLE */
+.expand-toggle{font-size:11px;color:var(--bl);cursor:pointer;font-weight:600;margin-top:6px;display:inline-block;user-select:none}
+.expand-toggle:hover{text-decoration:underline}
+
+/* SORTABLE TH */
+.tbl th.sortable{cursor:pointer;user-select:none;transition:color .12s}
+.tbl th.sortable:hover{color:var(--gm)}
+
+/* RANK ROW (category / remark breakdown) */
+.rank-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--blt)}
+.rank-row:last-child{border-bottom:none}
+.rank-num{width:18px;height:18px;border-radius:50%;background:var(--bg);color:var(--sub);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rank-label{font-size:12px;color:var(--tx);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-count{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--sub);flex-shrink:0}
+.rank-bar-track{width:50px;height:5px;background:var(--bg);border-radius:3px;overflow:hidden;flex-shrink:0}
+.rank-bar-fill{height:100%;border-radius:3px}
+
+/* VIEW SWITCHER (Studio pill toggle) */
+.view-switch{display:inline-flex;background:var(--bg);border:1px solid var(--bdr);border-radius:20px;padding:3px;margin-bottom:14px}
+.vs-btn{padding:6px 16px;border-radius:16px;font-size:12px;font-weight:500;color:var(--sub);cursor:pointer;transition:all .12s;white-space:nowrap}
+.vs-btn.active{background:var(--sur);color:var(--tx);font-weight:600;box-shadow:var(--sh)}
+
+/* THROUGHPUT TRACKING */
+.tp-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl2);overflow:hidden;margin-bottom:12px}
+.tp-hd{background:#FAFBFC;border-bottom:1px solid var(--bdr);padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.tp-hd:hover{background:#F3F5F7}
+.tp-name{font-size:13px;font-weight:700}
+.tp-meta{font-size:11px;color:var(--mu)}
+.tp-statuses{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.tp-stat-chip{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.tp-body{padding:0 14px 12px}
+.tp-task-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--blt);flex-wrap:wrap}
+.tp-task-row:last-child{border-bottom:none}
+.tp-task-id{font-family:var(--fm);font-size:11px;color:var(--bl);width:64px;flex-shrink:0}
+.tp-task-status{flex-shrink:0}
+.tp-task-time{font-size:11px;color:var(--sub);margin-left:auto;text-align:right;white-space:nowrap}
+.tp-capacity-track{flex:1;height:7px;background:var(--bg);border-radius:4px;overflow:hidden;border:1px solid var(--blt);min-width:60px}
+.tp-capacity-fill{height:100%;border-radius:4px}
+.tp-cat-card{background:var(--sur);border:1px solid var(--bdr);border-radius:var(--rl2);padding:14px;margin-bottom:12px}
+.tp-bottleneck{background:var(--rl);border:1px solid var(--rb);color:var(--red)}
+.tp-on-pace{background:var(--gl);border:1px solid var(--gb);color:var(--gm)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#9CA3AF}
+
+@media(max-width:960px){
+  .kpi-strip{grid-template-columns:repeat(3,1fr)}
+  .g2,.g3,.g4,.gwn{grid-template-columns:1fr}
+  .mfg{grid-template-columns:1fr 1fr}
+  .ckg{grid-template-columns:1fr 1fr}
+  .sbdy{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div id="shared-tip"></div>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<nav class="sb">
+  <div class="sb-logo">S</div>
+  <div class="sb-nav">
+    <div class="sbn" data-p="datasources" data-l="Data Sources" data-hint="Upload .xlsx files or link a hosted file for automatic syncing. Manage every active data source from here." onclick="nav(this)"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
+    <div class="sb-sep"></div>
+    <div class="sbn on" data-p="overview" data-l="Overview" data-hint="Headline KPIs and distribution charts across the entire active dataset." onclick="nav(this)"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+    <div class="sbn" data-p="telecaller" data-l="Telecaller Performance" data-hint="Per-telecaller workload, error rates, and rejection category breakdowns for managerial review." onclick="nav(this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+    <div class="sbn" data-p="operators" data-l="Operators &amp; Surveyors" data-hint="On-ground operator and surveyor performance, organized by territory and reporting line." onclick="nav(this)"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+    <div class="sbn" data-p="rejections" data-l="Rejection Analysis" data-hint="Rejection categories, task combination patterns, DSR tracking status, and authentication failures." onclick="nav(this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+    <div class="sbn" data-p="productivity" data-l="Productivity" data-hint="Throughput capacity and time-based projections for telecaller staffing decisions." onclick="nav(this)"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+    <div class="sbn" data-p="throughput" data-l="Throughput &amp; Bottleneck" data-hint="Live view of what every telecaller is assigned, what they are working on right now, and how actual turnaround compares to benchmark effort." onclick="nav(this)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg></div>
+    <div class="sbn" data-p="sentiment" data-l="Farmer Signals" data-hint="Per-farm behavioral and document readiness signals derived from rejection and remark data." onclick="nav(this)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+    <div class="sbn" data-p="records" data-l="Farm Records" data-hint="The full farm-level record list with filters to drill into any individual form." onclick="nav(this)"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+    <div class="sbn" data-p="remarks" data-l="Remarks Feed" data-hint="Chronological feed of operator remarks and manager notes attached to individual forms." onclick="nav(this)"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+  </div>
+  <div class="sb-sep"></div>
+  <div class="sb-bot"><div class="sbn" data-l="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div></div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+<header class="topbar">
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="tb-title">Manager, QA | QC</span>
+    <span class="badge">Kharif 2026</span>
+  </div>
+  <div class="tb-right">
+    <span class="sync" id="sync-label">Last sync: --</span>
+    <button class="btn btn-o btn-sm" onclick="openReportModal()">Generate Report</button>
+    <div class="ht" onclick="toggleH(this)">
+      <div class="trk" id="htrk"><div class="knob"></div></div>
+      <span>Hints</span>
+    </div>
+  </div>
+</header>
+
+<div class="cnt" id="cnt">
+
+<!-- ======= DATA SOURCES ======= -->
+<div id="panel-datasources" class="panel">
+  <div class="alrt alrt-blue"><span class="alrt-i">i</span><span>Upload a completed .xlsx file to load real data, or add a live link to a file hosted with public read access for periodic auto sync. Multiple sources can stay active at once. Farm record sources merge by Farm ID; task segmentation sources merge by combination row and the dashboard self-scales to whatever categories and task columns the file contains, with no code changes required.</span></div>
+
+  <div class="src-summary-strip" id="src-summary-strip"></div>
+
+  <div class="stl">Upload Files</div>
+  <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
+    <input type="file" id="file-input" multiple accept=".xlsx,.xls" style="display:none">
+    <div class="dz-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto;display:block"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+    <div class="dz-text">Drag and drop .xlsx files here, or <span class="dz-link">browse</span></div>
+    <div class="dz-sub">Automatically detects Farm Records and Task Segmentation sheets in each workbook</div>
+  </div>
+
+  <div class="stl h" data-hint="Polls the linked file on the chosen interval and re-syncs the dashboard automatically. Works only when the file host allows cross-origin browser access.">Live Linked Files <span class="stl-sub">Best effort, depends on host CORS policy</span></div>
+  <div class="link-row">
+    <input class="finp" id="link-url-input" placeholder="https:// direct link to a hosted .xlsx file">
+    <select class="fsel" id="link-interval">
+      <option value="30000">Sync every 30s</option>
+      <option value="60000" selected>Sync every 1 min</option>
+      <option value="300000">Sync every 5 min</option>
+      <option value="900000">Sync every 15 min</option>
+    </select>
+    <button class="btn btn-g" onclick="addLinkSource()">Add Link</button>
+  </div>
+  <div class="link-error" id="link-error"></div>
+
+  <div class="stl">Active Data Sources <span class="stl-sub" id="src-summary"></span></div>
+  <div class="tw">
+    <table class="tbl" id="sources-tbl"></table>
+  </div>
+</div>
+
+<!-- ======= OVERVIEW ======= -->
+<div id="panel-overview" class="panel on">
+  <div id="overview-alert"></div>
+  <div class="kpi-strip" id="kpi-strip"></div>
+  <div class="g2">
+    <div class="card"><div class="chd"><span class="ct h" data-hint="Number of farm records assigned to each telecaller in the active dataset. Uneven distribution may indicate assignment bias or capacity limits.">Telecaller Workload</span></div><div id="ov-tc"></div></div>
+    <div class="card"><div class="chd"><span class="ct h" data-hint="Count of records where each document category is marked MISSING. Higher bars point to upstream field collection gaps for that category.">Verification Category Health</span></div><div id="ov-cat"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="chd"><span class="ct h" data-hint="Ranked frequency of rejection reasons across the active dataset. Recurring reasons point to training or process gaps worth addressing systematically.">Top Rejection Reasons</span></div><div id="ov-rej"></div></div>
+    <div class="card"><div class="chd"><span class="ct h" data-hint="Distinct operator response types logged against rejected forms, grouped from the free-text remarks field.">Operator Remark Signals</span></div><div id="ov-rmk"></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="chd"><span class="ct">State Distribution</span></div><div id="ov-state"></div></div>
+    <div class="card"><div class="chd"><span class="ct h" data-hint="Average operator log and GPS device coverage during Crop 1 sowing events. Both streams must clear the threshold for a DSR record to be validated.">DSR Live Tracking Summary</span></div><div id="ov-dsr"></div></div>
+  </div>
+</div>
+
+<!-- ======= TELECALLER ======= -->
+<div id="panel-telecaller" class="panel">
+  <div class="stl">Individual Verification Performance</div>
+  <div id="tc-insight"></div>
+
+  <div class="fr">
+    <span class="flbl">Filter:</span>
+    <select class="fsel" id="tc-f-block" onchange="renderTelecaller()"></select>
+    <select class="fsel" id="tc-f-district" onchange="renderTelecaller()"></select>
+    <select class="fsel" id="tc-f-state" onchange="renderTelecaller()"></select>
+    <input class="finp" id="tc-f-search" placeholder="Search telecaller..." oninput="renderTelecaller()" style="width:160px">
+  </div>
+
+  <div class="tw" style="margin-bottom:14px">
+    <table class="tbl" id="tc-table"></table>
+  </div>
+  <div class="stl h" data-hint="Each telecaller's rejections grouped into categories with the count of farm IDs in each. Ranked by count so the biggest issue per telecaller is immediately visible.">Per-Telecaller Rejection Categories</div>
+  <div id="tc-cards" class="g3" style="margin-bottom:20px"></div>
+
+  <div class="stl h" data-hint="Built from the uploaded task segmentation template. Automatically rebuilds from any file with Category and Sub-category columns, so new task columns or category labels appear without any code changes.">Task Combination Intelligence <span class="stl-sub" id="tci-source-label"></span></div>
+
+  <div class="g3" style="margin-bottom:12px">
+    <div class="card">
+      <div class="chd"><span class="ct h" data-hint="How many distinct task combinations exist within each category. Larger categories require broader verification coverage per form.">Category Distribution</span></div>
+      <div id="cat-dist-bars"></div>
+    </div>
+    <div class="card">
+      <div class="chd"><span class="ct h" data-hint="Average number of tasks per combination within each category. Higher complexity categories take more telecaller time per form.">Task Complexity by Category</span></div>
+      <div id="complexity-bars"></div>
+    </div>
+    <div class="card">
+      <div class="chd"><span class="ct h" data-hint="Which task modules are responsible for rejections in the active dataset, derived from rejection reason mapping.">Batch Rejection by Module</span></div>
+      <div id="module-rej-bars"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="chd">
+      <span class="ct h" data-hint="Log the exact tasks that came back for rework on a given form. The system identifies the matching category and builds a running log to surface patterns over time.">Rework Combination Logger</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="cm" id="log-count-label">0 entries logged</span>
+        <button class="btn btn-o btn-sm" onclick="clearLog()">Clear Log</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--mu);margin-bottom:8px">Select the tasks that came back for rework on a given form, then log the combination.</div>
+    <div class="task-sel" id="task-selector"></div>
+    <div class="combo-result" id="combo-result"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-g btn-sm" onclick="logCombo()">Log Combination</button>
+      <button class="btn btn-o btn-sm" onclick="clearSel()">Clear Selection</button>
+    </div>
+    <div id="combo-log"></div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="chd"><span class="ct h" data-hint="Tasks ranked by frequency across all possible combinations. Tasks with consistent rejection reasons are the highest automation priority regardless of frequency.">Automation Potential by Task</span></div>
+      <div id="auto-potential"></div>
+    </div>
+    <div class="card">
+      <div class="chd"><span class="ct h" data-hint="Aggregated insights from the rework log below. Updates live as combinations are logged.">Logged Rework Pattern Summary</span></div>
+      <div id="log-summary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ======= OPERATORS ======= -->
+<div id="panel-operators" class="panel">
+  <div class="alrt alrt-blue"><span class="alrt-i">i</span><span>Role hierarchy: Operators collect and upload field data, reporting to their Surveyor. Telecallers remotely verify that data. Surveyors supervise operators and are accountable for their territory's data quality.</span></div>
+
+  <div class="fr">
+    <span class="flbl">Filter:</span>
+    <select class="fsel" id="op-f-block" onchange="renderOperators()"></select>
+    <select class="fsel" id="op-f-surveyor" onchange="renderOperators()"></select>
+    <select class="fsel" id="op-f-state" onchange="renderOperators()"></select>
+    <input class="finp" id="op-f-search" placeholder="Search operator or surveyor..." oninput="renderOperators()" style="width:180px">
+  </div>
+
+  <div class="stl">Operator Performance</div>
+  <div class="tw" style="margin-bottom:14px"><table class="tbl" id="op-tbl"></table></div>
+  <div class="stl">Surveyor Coverage</div>
+  <div class="tw"><table class="tbl" id="sv-tbl"></table></div>
+</div>
+
+<!-- ======= REJECTION ANALYSIS ======= -->
+<div id="panel-rejections" class="panel">
+  <div class="stl">Category Rejection Heatmap</div>
+  <div id="rej-grid" class="g2" style="margin-bottom:20px"></div>
+
+  <div class="stl">DSR Tracking and Authentication Review</div>
+  <div class="fr">
+    <span class="flbl">Filter:</span>
+    <select class="fsel" id="rej-f-tc" onchange="renderRejectionTables()"></select>
+    <select class="fsel" id="rej-f-op" onchange="renderRejectionTables()"></select>
+    <select class="fsel" id="rej-f-state" onchange="renderRejectionTables()"></select>
+    <select class="fsel" id="rej-f-district" onchange="renderRejectionTables()"></select>
+    <select class="fsel" id="rej-f-block" onchange="renderRejectionTables()"></select>
+    <input class="finp" id="rej-f-search" placeholder="Search Farm ID / Farmer..." oninput="renderRejectionTables()" style="width:170px">
+  </div>
+
+  <div class="stl">DSR Live Tracking Status</div>
+  <div class="tw" style="margin-bottom:14px">
+    <table class="tbl">
+      <thead><tr>
+        <th>Farm ID</th><th>Farmer</th><th>Telecaller</th><th>Operator</th>
+        <th class="h" data-hint="Operator device GPS coverage during the sowing event.">Op. Log %</th>
+        <th>Op. Log Status</th>
+        <th class="h" data-hint="External GPS device coverage. Both streams must pass for DSR validation.">GPS Log %</th>
+        <th>GPS Log Status</th>
+        <th>Rejection Reason</th>
+      </tr></thead>
+      <tbody id="dsr-body"></tbody>
+    </table>
+  </div>
+
+  <div class="stl">Authentication Failures</div>
+  <div class="tw" style="margin-bottom:20px">
+    <table class="tbl">
+      <thead><tr>
+        <th>Farm ID</th><th>Farmer</th>
+        <th class="h" data-hint="MISSING means the document was not uploaded during field collection.">Farmer ID Proof</th>
+        <th class="h" data-hint="Mandatory ownership or lease document for eligibility.">Land Record</th>
+        <th class="h" data-hint="NOT REQUIRED for OWNED farms in certain states.">Land Ownership Decl.</th>
+        <th class="h" data-hint="Incomplete historical records can block current season eligibility.">Historical Crop Auth.</th>
+      </tr></thead>
+      <tbody id="auth-body"></tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ======= PRODUCTIVITY ======= -->
+<div id="panel-productivity" class="panel">
+  <div class="g4" style="margin-bottom:14px">
+    <div class="card h" data-hint="Average case assumes 33.5 minutes per form. The slower case assumes 47 minutes per form, the longest task duration observed, which means fewer forms fit into a fixed 8 hour shift.">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:8px">Forms / TC / Day</div>
+      <div style="font-size:32px;font-weight:800;color:var(--gm);font-variant-numeric:tabular-nums">14</div>
+      <div style="font-size:11px;color:var(--mu);margin-top:4px">As low as 10 when forms take longer</div>
+    </div>
+    <div class="card h" data-hint="5 working days at the average daily throughput per telecaller. The slower figure applies the 47 minute per-form duration across the same 5 days.">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:8px">Forms / TC / Week</div>
+      <div style="font-size:32px;font-weight:800;color:var(--gm);font-variant-numeric:tabular-nums">71</div>
+      <div style="font-size:11px;color:var(--mu);margin-top:4px">As low as 51 when forms take longer</div>
+    </div>
+    <div class="card h" data-hint="65 working days per quarter at the average throughput. Useful for Kharif seasonal staffing decisions.">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:8px">Forms / TC / Quarter</div>
+      <div style="font-size:32px;font-weight:800;color:var(--gm);font-variant-numeric:tabular-nums">930</div>
+      <div style="font-size:11px;color:var(--mu);margin-top:4px">As low as 663 when forms take longer</div>
+    </div>
+    <div class="card h" data-hint="Telecallers required to verify 300 farmers in one working day. This number rises rather than falls in the slower case, because each telecaller covers less ground when every form takes longer.">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mu);margin-bottom:8px">TCs for 300 Farmers/Day</div>
+      <div style="font-size:32px;font-weight:800;color:var(--red);font-variant-numeric:tabular-nums">21</div>
+      <div style="font-size:11px;color:var(--mu);margin-top:4px">Up to 29 when forms take longer</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="stl" style="margin:0;flex:1">Per-Telecaller Hours Estimate <span class="stl-sub">Average case: 33.5 minutes per form</span></div>
+    <button class="btn btn-o btn-sm" onclick="openTimeModal()" style="margin-left:12px;flex-shrink:0">View Time Estimates</button>
+  </div>
+  <div id="prod-cards" class="g3"></div>
+</div>
+
+<!-- ======= THROUGHPUT & BOTTLENECK ======= -->
+<div id="panel-throughput" class="panel">
+  <div class="alrt alrt-blue"><span class="alrt-i">i</span><span id="tp-asof-banner">Live activity as of --. A pre-acceptance task last touched on this date is treated as Ongoing (the telecaller is actively on it right now); anything older is Idle, regardless of when the file itself was last synced.</span></div>
+
+  <div class="fr">
+    <span class="flbl">Idle threshold:</span>
+    <select class="fsel" id="tp-idle-threshold" onchange="renderThroughput()">
+      <option value="0">Same day only</option>
+      <option value="1">Within 1 day</option>
+      <option value="2">Within 2 days</option>
+    </select>
+    <span class="flbl h" data-hint="A pending task is shown as Ongoing if its last recorded activity falls within this many days of the most recent activity seen anywhere in the active dataset.">What does this mean?</span>
+  </div>
+
+  <div class="kpi-strip" id="tp-kpi-strip" style="margin-bottom:18px"></div>
+
+  <div class="view-switch" id="tp-view-switch">
+    <div class="vs-btn active" data-view="bytc" onclick="switchTpView(this)">By Telecaller</div>
+    <div class="vs-btn" data-view="bycat" onclick="switchTpView(this)">By Task Combination</div>
+  </div>
+
+  <div id="tp-view-bytc">
+    <div class="fr">
+      <span class="flbl">Filter:</span>
+      <select class="fsel" id="tp-f-tc" onchange="renderThroughput()"></select>
+      <select class="fsel" id="tp-f-status" onchange="renderThroughput()">
+        <option value="">All Statuses</option>
+        <option value="ongoing">Ongoing (Active Now)</option>
+        <option value="idle">Idle / Pending Acceptance</option>
+        <option value="unassigned">Unassigned</option>
+        <option value="accepted">Complete - Accepted</option>
+        <option value="rejected">Complete - Rejected</option>
+        <option value="pendingver">Complete - Pending Verification</option>
+      </select>
+    </div>
+    <div id="tp-tc-cards"></div>
+  </div>
+
+  <div id="tp-view-bycat" style="display:none">
+    <div class="stl h" data-hint="Farm IDs grouped by the rejection/task category they belong to, so you can see which telecallers received the same kind of rework and how their pace compares against the benchmark for that category.">Task Combination Groups</div>
+    <div id="tp-cat-cards"></div>
+  </div>
+</div>
+
+<!-- ======= FARMER SIGNALS ======= -->
+<div id="panel-sentiment" class="panel">
+  <div class="alrt alrt-pu"><span class="alrt-i">i</span><span>Behavioral signals are derived from rejection reason categories, DSR compliance data, and operator remarks. Signals are indicative and should inform, not replace, manager judgment.</span></div>
+
+  <div class="fr">
+    <span class="flbl">Filter:</span>
+    <select class="fsel" id="sn-f-block" onchange="renderSentiment()"></select>
+    <select class="fsel" id="sn-f-district" onchange="renderSentiment()"></select>
+    <select class="fsel" id="sn-f-risk" onchange="renderSentiment()">
+      <option value="">All Risk Levels</option>
+      <option value="Identity">Identity</option>
+      <option value="Document">Document</option>
+      <option value="Technical">Technical</option>
+      <option value="Process">Process</option>
+      <option value="Compliance">Compliance</option>
+    </select>
+    <input class="finp" id="sn-f-search" placeholder="Search Farm ID / Farmer..." oninput="renderSentiment()" style="width:180px">
+  </div>
+
+  <div class="stl">Document Readiness and Behavioral Signals</div>
+  <div id="sentiment-cards"></div>
+  <div class="stl" style="margin-top:8px">Operator Behavioral Patterns</div>
+  <div id="op-beh" class="g3"></div>
+</div>
+
+<!-- ======= FARM RECORDS ======= -->
+<div id="panel-records" class="panel">
+  <div class="fr">
+    <span class="flbl">Filter:</span>
+    <select class="fsel" id="f-tc" onchange="applyF()"></select>
+    <select class="fsel" id="f-op" onchange="applyF()"></select>
+    <select class="fsel" id="f-sv" onchange="applyF()"></select>
+    <select class="fsel" id="f-st" onchange="applyF()"></select>
+    <select class="fsel" id="f-di" onchange="applyF()"></select>
+    <input class="finp" id="f-q" placeholder="Search Farm ID / Farmer..." oninput="applyF()" style="width:180px">
+  </div>
+  <div class="tw">
+    <table class="tbl">
+      <thead><tr><th>Farm ID</th><th>Farmer ID</th><th>Date</th><th>Farmer</th><th>State</th><th>District</th><th>Block</th><th>Telecaller</th><th>Operator</th><th>Surveyor</th><th>Status</th><th>Rejection Reason</th><th>Op. Remark</th><th>Manager Note</th></tr></thead>
+      <tbody id="rec-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ======= REMARKS ======= -->
+<div id="panel-remarks" class="panel">
+  <div class="fr">
+    <span class="flbl">Filter:</span>
+    <select class="fsel" id="rm-f-block" onchange="renderRemarks()"></select>
+    <select class="fsel" id="rm-f-district" onchange="renderRemarks()"></select>
+    <select class="fsel" id="rm-f-tc" onchange="renderRemarks()"></select>
+    <select class="fsel" id="rm-f-op" onchange="renderRemarks()"></select>
+    <input class="finp" id="rm-f-search" placeholder="Search Farm ID / Farmer..." oninput="renderRemarks()" style="width:180px">
+  </div>
+  <div class="stl">Operator Remarks and Rejection Feed</div>
+  <div id="rmk-feed"></div>
+  <div class="stl" style="margin-top:14px">Manager Notes</div>
+  <div id="km-list"></div>
+</div>
+
+</div><!-- /cnt -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- FARM DETAIL MODAL -->
+<div class="mov" id="farm-mov">
+  <div class="modal">
+    <div class="mhd"><div><div class="mt" id="m-title"></div><div class="ms" id="m-sub"></div></div><button class="mc" onclick="closeModal('farm-mov')">&#x2715;</button></div>
+    <div class="mbdy" id="m-body"></div>
+  </div>
+</div>
+
+<!-- TIME ESTIMATES MODAL -->
+<div class="mov" id="time-mov">
+  <div class="modal" style="max-width:640px">
+    <div class="mhd"><div><div class="mt">Time Estimates per Task</div><div class="ms">Standard duration benchmarks used for productivity projections</div></div><button class="mc" onclick="closeModal('time-mov')">&#x2715;</button></div>
+    <div class="mbdy" style="padding:0">
+      <table class="tbl" id="time-tbl"></table>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT GENERATOR MODAL -->
+<div class="mov" id="report-mov">
+  <div class="modal" style="max-width:920px">
+    <div class="mhd"><div><div class="mt">Generate Report</div><div class="ms">Builds a printable summary from the active data sources</div></div><button class="mc" onclick="closeModal('report-mov')">&#x2715;</button></div>
+    <div class="report-controls">
+      <span class="flbl">Scope:</span>
+      <select class="fsel" id="rpt-scope" onchange="generateReport()"></select>
+      <span class="flbl">Period:</span>
+      <select class="fsel" id="rpt-period" onchange="generateReport()"></select>
+      <button class="btn btn-g btn-sm" onclick="generateReport()">Refresh</button>
+      <button class="btn btn-o btn-sm" onclick="printReport()">Print / Save as PDF</button>
+      <button class="btn btn-o btn-sm" onclick="downloadReportHtml()">Download HTML</button>
+    </div>
+    <div class="mbdy" style="padding:0">
+      <div id="report-output"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================== SAMPLE / BUILT-IN DATA ===============================
+const SAMPLE_FARM_ROWS=[{"Date of Onboarding":"2026-05-27","Farmer ID":184683,"Farm ID":176163,"Name of Surveyor":"Gori Shankar","State":"HARYANA","District":"SIRSA","Block":"ELLENABAD","Village":"dhani lakh ji","Name of Farmer":"Satpal","Farm Ownership Type":"FAMILY_OWNED","Cal. Farm Area (acres)":5.6805,"Sub. Farm Area (acres)":5.7,"Profile Picture Check":"PENDING","Mobile Number Check":"PENDING","Farmer ID Proof Check":"MISSING","Consent Signature Check":"PENDING","Consent Form Check":"PENDING","Consent Holding Photo Check":"PENDING","Land Record Check":"MISSING","Land Ownership Declaration Check":"MISSING","Farm KML Check":"PENDING","Name of Tenant":"VARAHA","Historical Crop Authentication":"Incomplete - Kharif Crop Missing | Incomplete - Paddy Sowing Method Missing","2025 Crop Data Authentication":"Incomplete Data - 2025 Paddy KML Missing | Incomplete Data - 2025 Wheat KML Missing","Final Status":"Not Eligible","DSR Operator Log Live Tracking %age C1":0.0,"DSR Operator Log Live Tracking Status C1":"Missing","DSR GPS Device Log Live Tracking %age C1":4.58,"DSR GPS Device Log Live Tracking Status C1":"Rejected","Telelcaller Name":"Rajesh","Operator Name":"Vikash","Rejection Reason":"Farmer photo mismatch","Operator Remarks":"Photos taken at different ages","Date Onboarded":"2026-05-09","Date Assigned":"2026-05-13","Date Accepted":null,"Task Status":"Incomplete - Pending (Telecaller) Acceptance","Last Updated":"2026-05-13"},{"Date of Onboarding":"2026-05-26","Farmer ID":184681,"Farm ID":176164,"Name of Surveyor":"Mohit Poonia","State":"HARYANA","District":"HISAR","Block":"NARNAUND","Village":"Petwar","Name of Farmer":"Pardeep Kumar","Farm Ownership Type":"OWNED","Cal. Farm Area (acres)":2.7894,"Sub. Farm Area (acres)":2.75,"Profile Picture Check":"PENDING","Mobile Number Check":"PENDING","Farmer ID Proof Check":"PENDING","Consent Signature Check":"PENDING","Consent Form Check":"PENDING","Consent Holding Photo Check":"PENDING","Land Record Check":"MISSING","Land Ownership Declaration Check":"NOT REQUIRED","Farm KML Check":"PENDING","Name of Tenant":"VARAHA","Historical Crop Authentication":"Incomplete - Kharif Crop Missing | Incomplete - Paddy Sowing Method Missing","2025 Crop Data Authentication":"Incomplete Data - 2025 Paddy KML Missing","Final Status":"Rejected","DSR Operator Log Live Tracking %age C1":17.07,"DSR Operator Log Live Tracking Status C1":"Rejected","DSR GPS Device Log Live Tracking %age C1":18.84,"DSR GPS Device Log Live Tracking Status C1":"Rejected","Telelcaller Name":"Ramesh","Operator Name":"Vikash","Rejection Reason":"Signature mismatch","Operator Remarks":"slight handwriting variation","Date Onboarded":"2026-05-03","Date Assigned":"2026-05-05","Date Accepted":"2026-05-07","Task Status":"Assigned - Complete (Farm ID Rejected)","Last Updated":"2026-05-07"},{"Date of Onboarding":"2026-05-28","Farmer ID":184680,"Farm ID":176162,"Name of Surveyor":"Ravinder Kumar","State":"HARYANA","District":"YAMUNANAGAR","Block":"RADAUR","Village":"jhiwerheri","Name of Farmer":"Jaswinder Singh","Farm Ownership Type":"FAMILY_OWNED","Cal. Farm Area (acres)":9.694,"Sub. Farm Area (acres)":9.7,"Profile Picture Check":"PENDING","Mobile Number Check":"PENDING","Farmer ID Proof Check":"PENDING","Consent Signature Check":"PENDING","Consent Form Check":"PENDING","Consent Holding Photo Check":"PENDING","Land Record Check":"MISSING","Land Ownership Declaration Check":"MISSING","Farm KML Check":"PENDING","Name of Tenant":"VARAHA","Historical Crop Authentication":"Incomplete - Kharif Crop Missing","2025 Crop Data Authentication":"Incomplete Data - 2025 Paddy KML Missing","Final Status":"Not Eligible","DSR Operator Log Live Tracking %age C1":0.0,"DSR Operator Log Live Tracking Status C1":"Missing","DSR GPS Device Log Live Tracking %age C1":0.0,"DSR GPS Device Log Live Tracking Status C1":"Missing","Telelcaller Name":"Suresh","Operator Name":"Rajeev","Rejection Reason":"Incorrect farm KML","Operator Remarks":"redone","Date Onboarded":"2026-05-20","Date Assigned":"2026-05-24","Date Accepted":null,"Task Status":"Ongoing","Last Updated":"2026-05-28"},{"Date of Onboarding":"2026-05-27","Farmer ID":184674,"Farm ID":176157,"Name of Surveyor":"Gori Shankar","State":"HARYANA","District":"SIRSA","Block":"ELLENABAD","Village":"Ellenabad","Name of Farmer":"Krishan","Farm Ownership Type":"FAMILY_OWNED","Cal. Farm Area (acres)":4.6659,"Sub. Farm Area (acres)":4.68,"Profile Picture Check":"PENDING","Mobile Number Check":"PENDING","Farmer ID Proof Check":"MISSING","Consent Signature Check":"PENDING","Consent Form Check":"PENDING","Consent Holding Photo Check":"PENDING","Land Record Check":"MISSING","Land Ownership Declaration Check":"MISSING","Farm KML Check":"PENDING","Name of Tenant":"VARAHA","Historical Crop Authentication":"Incomplete - Kharif Crop Missing","2025 Crop Data Authentication":"Incomplete Data - 2025 Paddy KML Missing","Final Status":"Pending Verification","DSR Operator Log Live Tracking %age C1":15.73,"DSR Operator Log Live Tracking Status C1":"Rejected","DSR GPS Device Log Live Tracking %age C1":0.0,"DSR GPS Device Log Live Tracking Status C1":"Missing","Telelcaller Name":"Ramesh","Operator Name":"Suman","Rejection Reason":"Consent signature mismatch","Operator Remarks":"slight handwriting variation","Date Onboarded":"2026-05-10","Date Assigned":"2026-05-12","Date Accepted":"2026-05-15","Task Status":"Assigned - Complete (Pending Verification)","Last Updated":"2026-05-15"},{"Date of Onboarding":"2026-05-28","Farmer ID":184672,"Farm ID":176159,"Name of Surveyor":"Ajay Kumar","State":"PUNJAB","District":"MANSA","Block":"SARDULGARH","Village":"karandi","Name of Farmer":"Ramchander","Farm Ownership Type":"FAMILY_OWNED","Cal. Farm Area (acres)":1.2143,"Sub. Farm Area (acres)":1.2,"Profile Picture Check":"PENDING","Mobile Number Check":"PENDING","Farmer ID Proof Check":"PENDING","Consent Signature Check":"PENDING","Consent Form Check":"PENDING","Consent Holding Photo Check":"PENDING","Land Record Check":"MISSING","Land Ownership Declaration Check":"MISSING","Farm KML Check":"PENDING","Name of Tenant":"Hoshiarpur CP","Historical Crop Authentication":"Incomplete - Kharif Crop Missing","2025 Crop Data Authentication":"Incomplete Data - 2025 Paddy KML Missing","Final Status":"Accepted","DSR Operator Log Live Tracking %age C1":95.5,"DSR Operator Log Live Tracking Status C1":"Accepted","DSR GPS Device Log Live Tracking %age C1":79.77,"DSR GPS Device Log Live Tracking Status C1":"Accepted","Telelcaller Name":"Rajesh","Operator Name":"Rajeev","Rejection Reason":"Incorrect activity photo","Operator Remarks":"redone","Date Onboarded":"2026-05-15","Date Assigned":"2026-05-17","Date Accepted":"2026-05-19","Task Status":"Assigned - Complete (Farm ID Accepted)","Last Updated":"2026-05-19"},{"Date of Onboarding":"2026-05-28","Farmer ID":184672,"Farm ID":176161,"Name of Surveyor":"Ajay Kumar","State":"PUNJAB","District":"MANSA","Block":"SARDULGARH","Village":"karandi","Name of Farmer":"Ramchander","Farm Ownership Type":"FAMILY_OWNED","Cal. Farm Area (acres)":0.8319,"Sub. Farm Area (acres)":0.83,"Profile Picture Check":"PENDING","Mobile Number Check":"PENDING","Farmer ID Proof Check":"PENDING","Consent Signature Check":"PENDING","Consent Form Check":"PENDING","Consent Holding Photo Check":"PENDING","Land Record Check":"MISSING","Land Ownership Declaration Check":"MISSING","Farm KML Check":"PENDING","Name of Tenant":"Hoshiarpur CP","Historical Crop Authentication":"Incomplete - Kharif Crop Missing","2025 Crop Data Authentication":"Incomplete Data - 2025 Paddy KML Missing","Final Status":"Unassigned","DSR Operator Log Live Tracking %age C1":0.0,"DSR Operator Log Live Tracking Status C1":"Missing","DSR GPS Device Log Live Tracking %age C1":0.0,"DSR GPS Device Log Live Tracking Status C1":"Missing","Telelcaller Name":null,"Operator Name":"Vikash","Rejection Reason":"Incorrect activity video","Operator Remarks":"redone","Date Onboarded":"2026-05-18","Date Assigned":null,"Date Accepted":null,"Task Status":"Unassigned","Last Updated":"2026-05-18"},{"Date of Onboarding":"2026-05-28","Farmer ID":184670,"Farm ID":176155,"Name of Surveyor":"Gori Shankar","State":"HARYANA","District":"SIRSA","Block":"ELLENABAD","Village":"Ellenabad","Name of Farmer":"Rati Ram","Farm Ownership Type":"FAMILY_OWNED","Cal. Farm Area (acres)":2.1591,"Sub. Farm Area (acres)":2.0,"Profile Picture Check":"PENDING","Mobile Number Check":"PENDING","Farmer ID Proof Check":"PENDING","Consent Signature Check":"PENDING","Consent Form Check":"PENDING","Consent Holding Photo Check":"PENDING","Land Record Check":"MISSING","Land Ownership Declaration Check":"MISSING","Farm KML Check":"PENDING","Name of Tenant":"VARAHA","Historical Crop Authentication":"Incomplete - Kharif Crop Missing","2025 Crop Data Authentication":"Incomplete Data - 2025 Paddy KML Missing","Final Status":"Not Eligible","DSR Operator Log Live Tracking %age C1":0.0,"DSR Operator Log Live Tracking Status C1":"Missing","DSR GPS Device Log Live Tracking %age C1":0.0,"DSR GPS Device Log Live Tracking Status C1":"Missing","Telelcaller Name":"Suresh","Operator Name":"Vikash","Rejection Reason":"Incorrect crop KML","Operator Remarks":"requested reassessment","Date Onboarded":"2026-05-20","Date Assigned":"2026-05-23","Date Accepted":null,"Task Status":"Incomplete - Pending (Telecaller) Acceptance","Last Updated":"2026-05-23"},{"Date of Onboarding":"2026-05-28","Farmer ID":184665,"Farm ID":176150,"Name of Surveyor":"Gori Shankar","State":"HARYANA","District":"SIRSA","Block":"ELLENABAD","Village":"Ellenabad","Name of Farmer":"Buta Singh","Farm Ownership Type":"FAMILY_OWNED","Cal. Farm Area (acres)":3.8745,"Sub. Farm Area (acres)":3.89,"Profile Picture Check":"PENDING","Mobile Number Check":"PENDING","Farmer ID Proof Check":"PENDING","Consent Signature Check":"PENDING","Consent Form Check":"PENDING","Consent Holding Photo Check":"PENDING","Land Record Check":"MISSING","Land Ownership Declaration Check":"MISSING","Farm KML Check":"PENDING","Name of Tenant":"VARAHA","Historical Crop Authentication":"Incomplete - Kharif Crop Missing","2025 Crop Data Authentication":"Incomplete Data - 2025 Paddy KML Missing","Final Status":"Pending Verification","DSR Operator Log Live Tracking %age C1":9.72,"DSR Operator Log Live Tracking Status C1":"Rejected","DSR GPS Device Log Live Tracking %age C1":0.0,"DSR GPS Device Log Live Tracking Status C1":"Missing","Telelcaller Name":"Durgesh","Operator Name":"Rajeev","Rejection Reason":"Land record mismatch","Operator Remarks":"redone","Date Onboarded":"2026-05-22","Date Assigned":"2026-05-28","Date Accepted":null,"Task Status":"Ongoing","Last Updated":"2026-05-28"}];
+
+const SAMPLE_TASK_COLS=["Profile Picture Check","Mobile Number Check","Farmer ID Proof Check","Consent Signature Check","Consent Form Check","Consent Holding Photo Check","Land Record Check","Land Ownership Declaration Check","Farm KML Check","Crop KML","Crop Information","Event 1 (Photos)","Event 1 (Videos)"];
+const SAMPLE_CAT_DATA={"Farmer + Farm + Crop + Practice":{count:3969,avg:7.4,min:4,max:13},"Farmer + Farm + Crop":{count:1323,avg:6.1,min:3,max:11},"Farmer + Farm + Practice":{count:1323,avg:6.1,min:3,max:11},"Farmer + Crop + Practice":{count:567,avg:5.7,min:3,max:10},"Farmer + Farm":{count:441,avg:4.8,min:2,max:9},"Farmer + Crop":{count:189,avg:4.4,min:2,max:8},"Farmer + Practice":{count:189,avg:4.4,min:2,max:8},"Farmer Only":{count:63,avg:3.0,min:1,max:6},"Farm + Crop + Practice":{count:63,avg:4.4,min:3,max:7},"Farm + Crop":{count:21,avg:3.0,min:2,max:5},"Farm + Practice":{count:21,avg:3.0,min:2,max:5},"Crop + Practice":{count:9,avg:2.7,min:2,max:4},"Farm Only":{count:7,avg:1.7,min:1,max:3},"Crop Only":{count:3,avg:1.3,min:1,max:2},"Practice Only":{count:3,avg:1.3,min:1,max:2}};
+const SAMPLE_TASK_FREQ={};
+SAMPLE_TASK_COLS.forEach(c=>{SAMPLE_TASK_FREQ[c]=4096});
+const SAMPLE_TOTAL_COMBOS=8191;
+
+const MODULE_GROUPS={
+  "Farmer":["Profile Picture Check","Mobile Number Check","Farmer ID Proof Check","Consent Signature Check","Consent Form Check","Consent Holding Photo Check"],
+  "Farm":["Land Record Check","Land Ownership Declaration Check","Farm KML Check"],
+  "Crop":["Crop KML","Crop Information"],
+  "Practice":["Event 1 (Photos)","Event 1 (Videos)"]
+};
+const MODULE_COLOR_CLASS={"Farmer":"farmer","Farm":"farm","Crop":"crop","Practice":"practice","Other":"other"};
+const MODULE_HEX={"Farmer":"#1E40AF","Farm":"#166534","Crop":"#9A3412","Practice":"#5B21B6","Other":"#374151"};
+const PERIODS=["Daily","Weekly","Quarterly","Semi-Annually","Annually"];
+const SECTION_LABELS={overview:"Overview",telecaller:"Telecaller Performance",operators:"Operators & Surveyors",rejections:"Rejection Analysis",productivity:"Productivity",sentiment:"Farmer Signals",records:"Farm Records",remarks:"Remarks Feed"};
+
+// =============================== MUTABLE STATE ===============================
+let D = SAMPLE_FARM_ROWS.slice();
+let CAT_DATA = JSON.parse(JSON.stringify(SAMPLE_CAT_DATA));
+let TASK_COLS_CURRENT = SAMPLE_TASK_COLS.slice();
+let TASK_FREQ_CURRENT = {...SAMPLE_TASK_FREQ};
+let TOTAL_COMBOS_CURRENT = SAMPLE_TOTAL_COMBOS;
+let TASK_DATA_IS_SAMPLE = true;
+let MODULE_MAP_CURRENT = JSON.parse(JSON.stringify(MODULE_GROUPS));
+
+let SOURCES = [];
+let nextSourceId = 1;
+const LINK_TIMERS = {};
+const KMN = {};
+const COMBO_LOG = [];
+
+SOURCES.push({id:nextSourceId++, key:'sample::farm', label:'Sample Farm Records (built-in)', kind:'farm_records', originType:'sample', rows:SAMPLE_FARM_ROWS, rowCount:SAMPLE_FARM_ROWS.length, addedAt:'Preloaded', lastSynced:'--', status:'active', active:true, period:'Daily'});
+SOURCES.push({id:nextSourceId++, key:'sample::task', label:'Sample Task Segmentation (built-in)', kind:'task_segmentation', originType:'sample', isSampleTaskStats:true, rows:null, taskCols:null, rowCount:SAMPLE_TOTAL_COMBOS, addedAt:'Preloaded', lastSynced:'--', status:'active', active:true, period:'Daily'});
+
+// =============================== CORE HELPERS ===============================
+const AVCOL=['#1B7A4A','#1E40AF','#92400E','#5B21B6','#0E7490','#B45309','#065F46','#7C3AED'];
+let aci=0;const acm={};
+function avc(n){if(!acm[n]){acm[n]=AVCOL[aci%AVCOL.length];aci++}return acm[n]}
+function av(n,s=28){const nm=(n||'?').trim();const p=nm.split(/\s+/);const i=p.length>=2?p[0][0]+p[1][0]:nm.substring(0,2);return`<span class="av" style="width:${s}px;height:${s}px;font-size:${s<=24?9:11}px;background:${avc(nm)}">${i.toUpperCase()}</span>`}
+function bdg(s){const u=(s||'').trim().toUpperCase().replace(/[\s/]+/g,'-');const m={PENDING:'bp',MISSING:'bm',ACCEPTED:'ba',REJECTED:'br2','NOT-ELIGIBLE':'bne','NOT-REQUIRED':'bnr'};return`<span class="bdg ${m[u]||'bnr'}">${(s||'').trim()||'--'}</span>`}
+function cntBy(k){const o={};D.forEach(r=>{const v=(r[k]||'').toString().trim()||'(blank)';o[v]=(o[v]||0)+1});return o}
+function joinTruncated(arr,n=3){const u=[...new Set(arr.filter(Boolean))];if(!u.length)return'--';if(u.length<=n)return u.join(', ');return u.slice(0,n).join(', ')+' +'+(u.length-n)+' more'}
+function scls(s){const u=(s||'').trim().toUpperCase().replace(/[\s/]+/g,'-');return{PENDING:'sp',MISSING:'sm',ACCEPTED:'sa',REJECTED:'sr','NOT-REQUIRED':'snr'}[u]||''}
+function cleanTaskLabel(name){return (name||'').split('\\n')[0].trim()}
+function escHtml(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function bars(id,counts,color){
+  const el=document.getElementById(id);if(!el)return;
+  const entries=Object.entries(counts);
+  if(!entries.length){el.innerHTML='<div class="bar-empty">No data in the active dataset.</div>';return}
+  const max=Math.max(...entries.map(e=>e[1]),1);
+  const tot=Math.max(D.length,1);
+  el.innerHTML=entries.sort((a,b)=>b[1]-a[1]).map(([l,n])=>{
+    const w=Math.round(n/max*100),pct=Math.round(n/tot*100);
+    return`<div class="br"><div class="bl" title="${escHtml(l)}">${escHtml(l)}</div><div class="bt"><div class="bf" style="width:${w}%;background:${color}"><span class="bn">${pct}%</span></div></div><div class="bv">${n}</div></div>`;
+  }).join('')
+}
+
+function computeKPIs(){
+  const total=D.length;
+  const rejected=D.filter(r=>(r['Final Status']||'').toLowerCase().includes('not eligible')).length;
+  const accepted=total-rejected;
+  const tcArr=[...new Set(D.map(r=>r['Telelcaller Name']).filter(Boolean))];
+  const opArr=[...new Set(D.map(r=>r['Operator Name']).filter(Boolean))];
+  const svArr=[...new Set(D.map(r=>r['Name of Surveyor']).filter(Boolean))];
+  const redone=D.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('redone')).length;
+  const reassess=D.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('reassessment')).length;
+  const CHECK_COLS=['Farmer ID Proof Check','Land Record Check','Land Ownership Declaration Check','Farm KML Check','Consent Signature Check','Profile Picture Check'];
+  let worstCheck='--',worstCheckCount=0;
+  CHECK_COLS.forEach(c=>{const n=D.filter(r=>(r[c]||'').toUpperCase()==='MISSING').length;if(n>worstCheckCount){worstCheckCount=n;worstCheck=c.replace(' Check','');}});
+  const denom=Math.max(total,1);
+  return {total,accepted,rejected,rejectedPct:Math.round(rejected/denom*100),
+    tcCount:tcArr.length,tcNames:joinTruncated(tcArr),
+    opCount:opArr.length,opNames:joinTruncated(opArr),svCount:svArr.length,
+    redone,redonePct:Math.round(redone/denom*100),reassess,
+    worstCheck,worstCheckCount,worstCheckPct:Math.round(worstCheckCount/denom*100)};
+}
+
+const ICON_DOC='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E40AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+const ICON_ALERT='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+const ICON_USER='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--bl)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+const ICON_TEAM='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gm)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>';
+const ICON_REDO='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amb)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>';
+const ICON_WARN='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+
+function emptyBanner(msg){
+  return `<div class="empty-banner">${msg}<br><button class="btn btn-g btn-sm" onclick="goToSources()">Go to Data Sources</button></div>`;
+}
+function goToSources(){ const el=document.querySelector('.sbn[data-p="datasources"]'); if(el) nav(el); }
+</script>
+<script>
+// =============================== SHARED UI HELPERS ===============================
+let expandCounter=0;
+function topNExpandable(items,n,renderFn,extraClass){
+  if(!items.length) return '<div style="font-size:11px;color:var(--mu)">No data.</div>';
+  const top=items.slice(0,n), rest=items.slice(n);
+  let html='<div class="'+(extraClass||'')+'">'+top.map(renderFn).join('')+'</div>';
+  if(rest.length){
+    const rid='exp'+(expandCounter++);
+    html+=`<div id="${rid}" style="display:none">${rest.map(renderFn).join('')}</div>`;
+    html+=`<div class="expand-toggle" data-more="Show ${rest.length} more" data-less="Show less" onclick="toggleExpand('${rid}',this)">Show ${rest.length} more &#9662;</div>`;
+  }
+  return html;
+}
+function toggleExpand(id,btn){
+  const el=document.getElementById(id);
+  const isHidden=!el.style.display||el.style.display==='none';
+  el.style.display=isHidden?'block':'none';
+  btn.innerHTML=isHidden?(btn.dataset.less+' &#9652;'):(btn.dataset.more+' &#9662;');
+}
+
+function classifyRejection(reasonText){
+  const rej=(reasonText||'').toLowerCase();
+  if(!rej) return null;
+  for(const[cat,d] of Object.entries(REJ_CAT)){
+    if(d.reasons.some(re=>rej.includes(re))) return cat;
+  }
+  return 'Other';
+}
+function rankBy(arr,keyFn){
+  const counts={};
+  arr.forEach(item=>{ const k=keyFn(item); if(k==null||k==='') return; counts[k]=(counts[k]||0)+1; });
+  return Object.entries(counts).map(([label,count])=>({label,count})).sort((a,b)=>b.count-a.count);
+}
+function sortRows(rows,key,dir,getter){
+  const sorted=rows.slice().sort((a,b)=>{
+    const av=getter(a,key), bv=getter(b,key);
+    if(typeof av==='number'&&typeof bv==='number') return dir==='asc'?av-bv:bv-av;
+    return dir==='asc'?String(av).localeCompare(String(bv)):String(bv).localeCompare(String(av));
+  });
+  return sorted;
+}
+function sortArrow(state,key){
+  if(state.key!==key) return '';
+  return state.dir==='asc' ? ' &#9650;' : ' &#9660;';
+}
+function thSort(label,key,fnName,state,hint){
+  const arrow=sortArrow(state,key);
+  const hintAttr=hint?` data-hint="${hint}"`:'';
+  return `<th class="sortable${hint?' h':''}"${hintAttr} onclick="${fnName}('${key}')">${label}${arrow}</th>`;
+}
+function populateSelect(id,key,rows,label){
+  const el=document.getElementById(id); if(!el) return;
+  const cur=el.value;
+  el.innerHTML=`<option value="">All ${label}</option>`;
+  [...new Set(rows.map(r=>r[key]).filter(Boolean))].sort().forEach(v=>{ el.innerHTML+=`<option value="${escHtml(v)}">${escHtml(v)}</option>`; });
+  if([...el.options].some(o=>o.value===cur)) el.value=cur;
+}
+
+// =============================== THROUGHPUT / BOTTLENECK HELPERS ===============================
+function parseDate(v){
+  if(v==null||v==='') return null;
+  if(v instanceof Date) return isNaN(v.getTime())?null:v;
+  if(typeof v==='number'){ const d=new Date(Math.round((v-25569)*86400*1000)); return isNaN(d.getTime())?null:d; }
+  const d=new Date(v);
+  return isNaN(d.getTime())?null:d;
+}
+function fmtDate(d){ const p=parseDate(d); return p?p.toISOString().slice(0,10):'--'; }
+function daysBetween(a,b){ if(!a||!b) return null; return Math.round((b-a)/86400000); }
+
+// Median-minute benchmark per rework category, built from the same per-task duration
+// benchmarks used in Productivity (TIME_DATA). Used as the "expected effort" reference
+// when comparing against actual telecaller turnaround time.
+const CATEGORY_MEDIAN_MINUTES={
+  'Photo / Identity Mismatch':2,
+  'Signature Mismatch':3.25,
+  'KML / Boundary Error':3,
+  'Activity Capture Issue':2,
+  'Land Record Mismatch':8.25,
+  'Other':3
+};
+
+function getTaskStatus(row){
+  const sheetVal=(row['Task Status']||'').trim();
+  if(sheetVal) return sheetVal;
+  return deriveTaskStatus(row);
+}
+function deriveTaskStatus(row){
+  const tc=row['Telelcaller Name'];
+  const dAssigned=parseDate(row['Date Assigned']);
+  const dAccepted=parseDate(row['Date Accepted']);
+  if(!tc||!dAssigned) return 'Unassigned';
+  if(dAccepted){
+    const fs=(row['Final Status']||'').toLowerCase();
+    if(fs.includes('reject')||fs.includes('not eligible')) return 'Assigned - Complete (Farm ID Rejected)';
+    if(fs.includes('pending verification')) return 'Assigned - Complete (Pending Verification)';
+    return 'Assigned - Complete (Farm ID Accepted)';
+  }
+  return 'Incomplete - Pending (Telecaller) Acceptance'; // recency overlay applied separately via isActiveNow
+}
+function getLastUpdated(row){
+  const sheetVal=parseDate(row['Last Updated']);
+  if(sheetVal) return sheetVal;
+  const candidates=[row['Date Accepted'],row['Date Assigned'],row['Date Onboarded'],row['Date of Onboarding']].map(parseDate).filter(Boolean);
+  if(!candidates.length) return null;
+  return candidates.sort((a,b)=>b-a)[0];
+}
+// "As of" = the most recent activity timestamp seen anywhere in the active dataset.
+// A pre-acceptance task whose Last Updated matches this date is treated as actively
+// being worked on right now; anything older is idle, regardless of file sync timing.
+function computeAsOf(rows){
+  let max=null;
+  rows.forEach(r=>{ const d=getLastUpdated(r); if(d&&(!max||d>max)) max=d; });
+  return max;
+}
+function statusBucket(row,asOf){
+  const status=getTaskStatus(row);
+  if(/unassigned/i.test(status)) return {key:'unassigned',label:'Unassigned',color:'var(--mu)'};
+  if(/rejected/i.test(status)) return {key:'rejected',label:'Complete - Rejected',color:'var(--red)'};
+  if(/pending verification/i.test(status)) return {key:'pendingver',label:'Complete - Pending Verification',color:'var(--amb)'};
+  if(/accepted/i.test(status)) return {key:'accepted',label:'Complete - Accepted',color:'var(--gm)'};
+  // pre-acceptance: split Ongoing vs Idle by recency against asOf
+  const lu=getLastUpdated(row);
+  const isFresh = asOf && lu && daysBetween(lu,asOf)<=0;
+  if(/ongoing/i.test(status) || isFresh) return {key:'ongoing',label:'Ongoing (Active Now)',color:'var(--bl)'};
+  return {key:'idle',label:'Incomplete - Pending Acceptance (Idle)',color:'var(--amb)'};
+}
+function elapsedDaysForRow(row,asOf){
+  const dA=parseDate(row['Date Assigned']);
+  if(!dA) return null;
+  const dC=parseDate(row['Date Accepted']) || asOf;
+  if(!dC) return null;
+  return Math.max(daysBetween(dA,dC),0);
+}
+</script>
+
+<script>
+// =============================== TASK STATS RECOMPUTE ===============================
+function guessModule(colName){
+  const c=(colName||'').toLowerCase();
+  if(/farmer|profile|mobile|consent|signature/.test(c)) return 'Farmer';
+  if(/crop/.test(c)) return 'Crop';
+  if(/land|farm.?kml/.test(c)) return 'Farm';
+  if(/event|video|photo|practice|sow/.test(c)) return 'Practice';
+  return 'Other';
+}
+function recomputeTaskStats(rows,taskCols){
+  if(!rows||!rows.length||!taskCols||!taskCols.length){ resetTaskStatsToSample(); return; }
+  const catGroups={};
+  const freq={}; taskCols.forEach(c=>freq[c]=0);
+  rows.forEach(row=>{
+    const cat=(row['Category']||'Unspecified').toString().trim();
+    let tcount=0;
+    taskCols.forEach(c=>{
+      const v=row[c];
+      const present = v===1||v===true||(typeof v==='string'&&/^(y|yes|true|1)$/i.test(v.trim()));
+      if(present){tcount++;freq[c]++;}
+    });
+    if(!catGroups[cat])catGroups[cat]=[];
+    catGroups[cat].push(tcount);
+  });
+  const newCat={};
+  Object.entries(catGroups).forEach(([cat,counts])=>{
+    const sum=counts.reduce((a,b)=>a+b,0);
+    newCat[cat]={count:counts.length,avg:+(sum/counts.length).toFixed(1),min:Math.min(...counts),max:Math.max(...counts)};
+  });
+  CAT_DATA=newCat;
+  TASK_COLS_CURRENT=taskCols.slice();
+  TASK_FREQ_CURRENT=freq;
+  TOTAL_COMBOS_CURRENT=rows.length;
+  MODULE_MAP_CURRENT={};
+  taskCols.forEach(c=>{
+    let mod=null;
+    for(const[m,cols] of Object.entries(MODULE_GROUPS)){ if(cols.includes(c)){mod=m;break;} }
+    if(!mod) mod=guessModule(c);
+    if(!MODULE_MAP_CURRENT[mod])MODULE_MAP_CURRENT[mod]=[];
+    MODULE_MAP_CURRENT[mod].push(c);
+  });
+}
+function resetTaskStatsToSample(){
+  CAT_DATA=JSON.parse(JSON.stringify(SAMPLE_CAT_DATA));
+  TASK_COLS_CURRENT=SAMPLE_TASK_COLS.slice();
+  TASK_FREQ_CURRENT={...SAMPLE_TASK_FREQ};
+  TOTAL_COMBOS_CURRENT=SAMPLE_TOTAL_COMBOS;
+  MODULE_MAP_CURRENT=JSON.parse(JSON.stringify(MODULE_GROUPS));
+}
+
+// =============================== MERGE / REBUILD ===============================
+function mergeFarmSources(pred){
+  const merged={};let n=0;
+  SOURCES.filter(s=>s.kind==='farm_records'&&pred(s)).forEach(s=>{
+    (s.rows||[]).forEach(row=>{
+      const fid=row['Farm ID'];
+      const key=(fid!=null&&fid!=='')?('id_'+fid):('noid_'+(n++));
+      merged[key]=row;
+    });
+  });
+  return Object.values(merged);
+}
+function mergeTaskSources(pred){
+  const real=SOURCES.filter(s=>s.kind==='task_segmentation'&&!s.isSampleTaskStats&&pred(s));
+  if(!real.length) return null;
+  let rows=[];let cols=null;
+  real.forEach(s=>{rows.push(...(s.rows||[]));if(!cols)cols=s.taskCols;});
+  return {rows,taskCols:cols};
+}
+
+let done={};
+function rebuildDataset(){
+  D=mergeFarmSources(s=>s.active);
+  const t=mergeTaskSources(s=>s.active);
+  if(t){ recomputeTaskStats(t.rows,t.taskCols); TASK_DATA_IS_SAMPLE=false; }
+  else { resetTaskStatsToSample(); TASK_DATA_IS_SAMPLE=true; }
+  done={};
+  document.getElementById('sync-label').textContent='Last sync: '+new Date().toLocaleString();
+  renderSourcesPanel();
+  rerenderCurrentPanel();
+}
+function rerenderCurrentPanel(){
+  const activeEl=document.querySelector('.sbn.on');
+  const p=activeEl?activeEl.dataset.p:'overview';
+  if(RENDERERS[p]){ RENDERERS[p](); done[p]=true; }
+}
+
+// =============================== XLSX INGESTION ===============================
+function detectColsKind(cols){
+  if(cols.includes('Farm ID')&&cols.includes('Telelcaller Name')) return 'farm_records';
+  if(cols.includes('Category')&&cols.includes('Sub-category')) return 'task_segmentation';
+  return 'unknown';
+}
+function addOrUpdateSource(meta){
+  if(meta.originType==='link'){
+    const key='link::'+meta.url+'::'+meta.sheetName;
+    const existing=SOURCES.find(s=>s.key===key);
+    if(existing){
+      existing.rows=meta.rows; existing.taskCols=meta.taskCols; existing.rowCount=meta.rowCount;
+      existing.lastSynced=new Date().toLocaleTimeString(); existing.status='active'; existing.error=null;
+      return;
+    }
+    meta.key=key;
+  } else {
+    meta.key='upload::'+meta.label+'::'+Date.now()+'::'+Math.random();
+  }
+  meta.id=nextSourceId++;
+  meta.addedAt=new Date().toLocaleTimeString();
+  meta.lastSynced=meta.addedAt;
+  meta.status='active';
+  meta.active=true;
+  meta.period=meta.period||'Daily';
+  SOURCES.push(meta);
+}
+function addUnrecognizedSource(label,originType,errorMsg){
+  SOURCES.push({id:nextSourceId++,key:'unk::'+label+'::'+Date.now(),label:label,kind:'unknown',originType,rows:null,rowCount:null,addedAt:new Date().toLocaleTimeString(),lastSynced:'--',status:'error',error:errorMsg,active:false,period:'Daily'});
+}
+function ingestWorkbook(wb,label,originType,sourceMeta){
+  sourceMeta=sourceMeta||{};
+  let foundAny=false;
+  wb.SheetNames.forEach(sheetName=>{
+    let rows;
+    try{ rows=XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{defval:null}); }catch(e){ return; }
+    if(!rows.length) return;
+    const cols=Object.keys(rows[0]);
+    const kind=detectColsKind(cols);
+    if(kind==='farm_records'){
+      foundAny=true;
+      addOrUpdateSource(Object.assign({label:label+' - '+sheetName,kind:'farm_records',originType,rows,rowCount:rows.length,sheetName},sourceMeta));
+    } else if(kind==='task_segmentation'){
+      foundAny=true;
+      const taskCols=cols.filter(c=>c!=='Category'&&c!=='Sub-category');
+      addOrUpdateSource(Object.assign({label:label+' - '+sheetName,kind:'task_segmentation',originType,rows,taskCols,rowCount:rows.length,sheetName},sourceMeta));
+    }
+  });
+  if(!foundAny){
+    addUnrecognizedSource(label,originType,'No recognized Farm Records or Task Segmentation structure found in this workbook.');
+  }
+  rebuildDataset();
+}
+
+function handleFiles(fileList){
+  [...fileList].forEach(file=>{
+    if(!/\.(xlsx|xls)$/i.test(file.name)){ addUnrecognizedSource(file.name,'upload','Not a .xlsx or .xls file.'); rebuildDataset(); return; }
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      try{
+        if(typeof XLSX==='undefined') throw new Error('Parsing library not loaded. Check your internet connection and reload.');
+        const data=new Uint8Array(ev.target.result);
+        const wb=XLSX.read(data,{type:'array',cellDates:true});
+        ingestWorkbook(wb,file.name,'upload');
+      }catch(err){
+        addUnrecognizedSource(file.name,'upload','Could not parse file: '+err.message);
+        rebuildDataset();
+      }
+    };
+    reader.onerror=()=>{ addUnrecognizedSource(file.name,'upload','File could not be read.'); rebuildDataset(); };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// =============================== LIVE LINK ===============================
+function urlLabel(url){ try{ const u=new URL(url); return u.hostname+(u.pathname.split('/').pop()?('/'+u.pathname.split('/').pop()):''); }catch(e){ return url; } }
+function showLinkError(msg){ const el=document.getElementById('link-error'); el.textContent=msg; el.style.display='block'; }
+function hideLinkError(){ document.getElementById('link-error').style.display='none'; }
+
+async function fetchAndIngestLink(url,isInitial,period){
+  try{
+    if(typeof XLSX==='undefined') throw new Error('Parsing library not loaded yet. Try again in a moment.');
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const buf=await res.arrayBuffer();
+    const wb=XLSX.read(new Uint8Array(buf),{type:'array',cellDates:true});
+    ingestWorkbook(wb,urlLabel(url),'link',{url,period:period});
+    return true;
+  }catch(err){
+    if(isInitial){
+      showLinkError('Could not fetch this URL from the browser, most likely a cross-origin (CORS) restriction on the host. Try a publicly published export link, or use Upload instead. Details: '+err.message);
+      return false;
+    } else {
+      SOURCES.filter(s=>s.originType==='link'&&s.url===url).forEach(s=>{ s.status='error'; s.error=err.message; });
+      renderSourcesPanel();
+      return false;
+    }
+  }
+}
+function addLinkSource(){
+  const url=document.getElementById('link-url-input').value.trim();
+  const intervalMs=+document.getElementById('link-interval').value;
+  hideLinkError();
+  if(!url){ showLinkError('Enter a URL first.'); return; }
+  if(LINK_TIMERS[url]){ showLinkError('This URL is already linked.'); return; }
+  fetchAndIngestLink(url,true,'Daily').then(ok=>{
+    if(ok){
+      LINK_TIMERS[url]=setInterval(()=>fetchAndIngestLink(url,false),intervalMs);
+      document.getElementById('link-url-input').value='';
+    }
+  });
+}
+function syncLinkNow(id){ const s=SOURCES.find(x=>x.id===id); if(s&&s.url) fetchAndIngestLink(s.url,false,s.period); }
+function syncAllLinks(){ Object.keys(LINK_TIMERS).forEach(url=>fetchAndIngestLink(url,false)); }
+
+function toggleSource(id){ const s=SOURCES.find(x=>x.id===id); if(s){ s.active=!s.active; rebuildDataset(); } }
+function setSourcePeriod(id,val){ const s=SOURCES.find(x=>x.id===id); if(s){ s.period=val; renderSourcesPanel(); } }
+function removeSource(id){
+  const idx=SOURCES.findIndex(s=>s.id===id); if(idx<0) return;
+  const s=SOURCES[idx];
+  if(s.url && !SOURCES.some((x,i)=>i!==idx&&x.url===s.url)){
+    if(LINK_TIMERS[s.url]){ clearInterval(LINK_TIMERS[s.url]); delete LINK_TIMERS[s.url]; }
+  }
+  SOURCES.splice(idx,1);
+  rebuildDataset();
+}
+
+// =============================== SOURCES PANEL ===============================
+function renderSourcesPanel(){
+  const stripEl=document.getElementById('src-summary-strip');
+  if(stripEl){
+    stripEl.innerHTML=`
+      <div class="ss-item h" data-hint="Sources currently switched on and contributing to the merged dataset shown across the dashboard.">
+        <div class="ss-num">${SOURCES.filter(s=>s.active).length}</div><div class="ss-lbl">Active Sources</div></div>
+      <div class="ss-item h" data-hint="Total unique farm records after merging every active farm-record source by Farm ID.">
+        <div class="ss-num">${D.length}</div><div class="ss-lbl">Farm Records Merged</div></div>
+      <div class="ss-item h" data-hint="${TASK_DATA_IS_SAMPLE?'No uploaded task segmentation file is active, so the dashboard is showing figures from the bundled sample template.':'Computed live from the active task segmentation source, not the sample template.'}">
+        <div class="ss-num">${TOTAL_COMBOS_CURRENT.toLocaleString()}</div><div class="ss-lbl">Task Combinations${TASK_DATA_IS_SAMPLE?' (sample)':' (live)'}</div></div>
+      <div class="ss-item h" data-hint="Number of live-linked files currently being polled on a timer for automatic re-sync. Zero means no live links have been added, or all were removed.">
+        <div class="ss-num">${Object.keys(LINK_TIMERS).length}</div><div class="ss-lbl">Live Links Active</div></div>`;
+  }
+  const sumEl=document.getElementById('src-summary');
+  if(sumEl) sumEl.textContent=`${SOURCES.length} total`;
+
+  const tbl=document.getElementById('sources-tbl');
+  if(!tbl) return;
+  const rows=SOURCES.map(s=>{
+    const typeBadge = s.originType==='sample'?'<span class="bdg bnr">Sample</span>':s.originType==='upload'?'<span class="bdg bi">Upload</span>':'<span class="bdg bpu">Live Link</span>';
+    const kindLabel = s.kind==='farm_records'?'Farm Records':s.kind==='task_segmentation'?'Task Segmentation':'Unrecognized';
+    const statusBadge = s.status==='active'?'<span class="bdg ba">Active</span>':s.status==='error'?'<span class="bdg bm">Error</span>':'<span class="bdg bp">Pending</span>';
+    const periodSel = `<select class="fsel" style="font-size:10px;padding:2px 6px" onchange="setSourcePeriod(${s.id},this.value)">${PERIODS.map(p=>`<option value="${p}" ${s.period===p?'selected':''}>${p}</option>`).join('')}</select>`;
+    return `<tr>
+      <td class="fw6">${escHtml(s.label)}${s.status==='error'?`<div style="font-size:10px;color:var(--red);margin-top:2px;font-weight:400">${escHtml(s.error||'Sync failed')}</div>`:''}</td>
+      <td>${typeBadge}</td><td style="font-size:11px">${kindLabel}</td>
+      <td class="mono">${s.rowCount??'--'}</td>
+      <td>${periodSel}</td>
+      <td class="mono" style="color:var(--mu)">${s.lastSynced||s.addedAt||'--'}</td>
+      <td>${statusBadge}</td>
+      <td><input type="checkbox" ${s.active?'checked':''} onchange="toggleSource(${s.id})"></td>
+      <td>${s.originType==='link'?`<button class="btn btn-o btn-sm" onclick="syncLinkNow(${s.id})">Sync Now</button> `:''}${s.originType!=='sample'?`<button class="btn btn-o btn-sm" onclick="removeSource(${s.id})">Remove</button>`:''}</td>
+    </tr>`;
+  }).join('');
+  tbl.innerHTML = `<thead><tr><th>Source</th><th>Type</th><th>Content</th><th>Rows</th><th class="h" data-hint="Tags this source for report generation. Daily, Weekly, Quarterly, Semi-Annually, or Annually.">Period</th><th>Last Synced</th><th>Status</th><th>Active</th><th>Actions</th></tr></thead><tbody>${rows||'<tr class="tbl-empty-row"><td colspan="9">No data sources yet.</td></tr>'}</tbody>`;
+}
+
+// drag and drop + file input wiring (called once on init)
+function wireDataSourceInputs(){
+  const fi=document.getElementById('file-input');
+  if(fi) fi.addEventListener('change',e=>{ handleFiles(e.target.files); e.target.value=''; });
+  const dz=document.getElementById('dropzone');
+  if(dz){
+    dz.addEventListener('dragover',e=>{ e.preventDefault(); dz.classList.add('drag'); });
+    dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+    dz.addEventListener('drop',e=>{ e.preventDefault(); dz.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+  }
+}
+</script>
+<script>
+// =============================== OVERVIEW ===============================
+function renderKPIs(){
+  const k=computeKPIs();
+  const el=document.getElementById('kpi-strip');
+  if(!D.length){ el.innerHTML=''; return; }
+  el.innerHTML=`
+    <div class="kpi h" data-hint="Total farm records in the active dataset, across every verification stage from pending to accepted or rejected.">
+      <div class="kpi-top"><div class="kpi-ico" style="background:#EFF6FF">${ICON_DOC}</div><span class="kpi-tag">Kharif 2026</span></div>
+      <div class="kpi-v">${k.total}</div><div class="kpi-l">Total Forms</div>
+      <div class="kpi-sr"><span class="kpi-si"><span class="dot" style="background:var(--gm)"></span>Accepted: ${k.accepted}</span><span class="kpi-si"><span class="dot" style="background:var(--red)"></span>Rejected: ${k.rejected}</span></div>
+    </div>
+    <div class="kpi h" data-hint="Share of the active dataset marked Not Eligible. A high rate across many forms usually points to a systemic upstream issue rather than isolated errors.">
+      <div class="kpi-top"><div class="kpi-ico" style="background:var(--rl)">${ICON_ALERT}</div><span class="kpi-tag" style="color:var(--red)">${k.rejectedPct}%</span></div>
+      <div class="kpi-v" style="color:var(--red)">${k.rejected}</div><div class="kpi-l">Not Eligible</div>
+      <div class="kpi-sr"><span class="kpi-si"><span class="dot" style="background:var(--amb)"></span>Redone: ${k.redone}</span><span class="kpi-si"><span class="dot" style="background:var(--pu)"></span>Disputed: ${k.reassess}</span></div>
+    </div>
+    <div class="kpi h" data-hint="Count of QA associates with at least one record in the active dataset. Uneven distribution may indicate assignment bias or capacity limits.">
+      <div class="kpi-top"><div class="kpi-ico" style="background:var(--bll)">${ICON_USER}</div><span class="kpi-tag">${escHtml(k.tcNames)}</span></div>
+      <div class="kpi-v" style="color:var(--bl)">${k.tcCount}</div><div class="kpi-l">Telecallers Active</div>
+      <div class="kpi-sr"><span class="kpi-si"><span class="dot" style="background:var(--bl)"></span>${k.total} forms total</span></div>
+    </div>
+    <div class="kpi h" data-hint="On-ground staff who collect and upload field data. Operators report to their assigned Surveyor.">
+      <div class="kpi-top"><div class="kpi-ico" style="background:var(--gl)">${ICON_TEAM}</div><span class="kpi-tag">${escHtml(k.opNames)}</span></div>
+      <div class="kpi-v" style="color:var(--gm)">${k.opCount}</div><div class="kpi-l">Operators Active</div>
+      <div class="kpi-sr"><span class="kpi-si"><span class="dot" style="background:var(--gm)"></span>${k.svCount} Surveyors mapped</span></div>
+    </div>
+    <div class="kpi h" data-hint="Forms resubmitted after rejection. High rework rates increase total processing time and point to unclear field guidance.">
+      <div class="kpi-top"><div class="kpi-ico" style="background:var(--al)">${ICON_REDO}</div><span class="kpi-tag" style="color:var(--amb)">${k.redonePct}% rate</span></div>
+      <div class="kpi-v" style="color:var(--amb)">${k.redone}</div><div class="kpi-l">Rework / Redone</div>
+      <div class="kpi-sr"><span class="kpi-si"><span class="dot" style="background:var(--pu)"></span>Reassess: ${k.reassess}</span></div>
+    </div>
+    <div class="kpi h" data-hint="The single verification category with the most MISSING records in the active dataset, usually the primary driver of ineligibility.">
+      <div class="kpi-top"><div class="kpi-ico" style="background:var(--rl)">${ICON_WARN}</div><span class="kpi-tag" style="color:var(--red)">${k.worstCheckPct}%</span></div>
+      <div class="kpi-v" style="color:var(--red)">${k.worstCheckCount}/${k.total}</div><div class="kpi-l">${escHtml(k.worstCheck)} Missing</div>
+      <div class="kpi-sr"><span class="kpi-si"><span class="dot" style="background:var(--red)"></span>${k.worstCheckPct}% of active dataset</span></div>
+    </div>`;
+}
+function renderOverviewAlert(){
+  const el=document.getElementById('overview-alert');
+  if(!D.length){ el.innerHTML=emptyBanner('No farm records in the active dataset. Add a source from Data Sources to populate this view.'); return; }
+  const k=computeKPIs();
+  if(k.rejectedPct>=60){
+    el.innerHTML=`<div class="alrt"><span class="alrt-i">!</span><span>${k.rejectedPct}% of forms in the active dataset are Not Eligible. ${escHtml(k.worstCheck)} is missing on ${k.worstCheckCount} of ${k.total} records, the largest single driver. Field escalation is recommended before the next queue cycle.</span></div>`;
+  } else {
+    el.innerHTML='';
+  }
+}
+function renderOverview(){
+  renderOverviewAlert();
+  renderKPIs();
+  bars('ov-tc',cntBy('Telelcaller Name'),'#1E40AF');
+  const cc={};['Farmer ID Proof Check','Land Record Check','Land Ownership Declaration Check','Farm KML Check','Consent Signature Check','Profile Picture Check'].forEach(c=>{
+    const n=D.filter(r=>(r[c]||'').toUpperCase()==='MISSING').length;if(n)cc[c.replace(' Check','')]=n;
+  });
+  bars('ov-cat',cc,'#B91C1C');
+  bars('ov-rej',cntBy('Rejection Reason'),'#92400E');
+  const rc={};
+  D.forEach(r=>{
+    const rm=(r['Operator Remarks']||'').trim().toLowerCase();
+    if(!rm) return;
+    const l=rm.includes('reassessment')?'Requested Reassessment':rm.includes('different ages')?'Photo Age Mismatch':rm.includes('handwriting')?'Handwriting Variation':rm==='redone'?'Redone':'Other';
+    rc[l]=(rc[l]||0)+1;
+  });
+  bars('ov-rmk',rc,'#5B21B6');
+  bars('ov-state',cntBy('State'),'#1B7A4A');
+  const dsrEl=document.getElementById('ov-dsr');
+  if(!D.length){ dsrEl.innerHTML='<div class="bar-empty">No data in the active dataset.</div>'; return; }
+  const opA=D.filter(r=>r['DSR Operator Log Live Tracking Status C1']==='Accepted').length;
+  const gpsA=D.filter(r=>r['DSR GPS Device Log Live Tracking Status C1']==='Accepted').length;
+  const opR=D.filter(r=>r['DSR Operator Log Live Tracking Status C1']==='Rejected').length;
+  const gpsR=D.filter(r=>r['DSR GPS Device Log Live Tracking Status C1']==='Rejected').length;
+  const aOp=D.reduce((s,r)=>s+(r['DSR Operator Log Live Tracking %age C1']||0),0)/D.length;
+  const aGps=D.reduce((s,r)=>s+(r['DSR GPS Device Log Live Tracking %age C1']||0),0)/D.length;
+  dsrEl.innerHTML=[
+    ['Avg. Operator Log Coverage',aOp,`${aOp.toFixed(1)}%`,'#1E40AF'],
+    ['Avg. GPS Device Log Coverage',aGps,`${aGps.toFixed(1)}%`,'#1B7A4A'],
+    ['Operator Log Accepted',opA/D.length*100,`${opA}/${D.length}`,'#1B7A4A'],
+    ['GPS Log Accepted',gpsA/D.length*100,`${gpsA}/${D.length}`,'#1B7A4A'],
+    ['Operator Log Rejected',opR/D.length*100,`${opR}/${D.length}`,'#B91C1C'],
+    ['GPS Log Rejected',gpsR/D.length*100,`${gpsR}/${D.length}`,'#B91C1C'],
+  ].map(([l,p,v,c])=>`<div class="dr"><span class="dl">${l}</span><div class="dtr"><div class="dfl" style="width:${p}%;background:${c}"></div></div><span class="dv">${v}</span></div>`).join('');
+}
+
+// =============================== TELECALLER ===============================
+let TC_SORT={key:'total',dir:'desc'};
+function sortTcBy(key){ if(TC_SORT.key===key) TC_SORT.dir=TC_SORT.dir==='desc'?'asc':'desc'; else { TC_SORT.key=key; TC_SORT.dir='desc'; } renderTelecaller(); }
+
+function renderTelecaller(){
+  populateSelect('tc-f-block','Block',D,'Blocks');
+  populateSelect('tc-f-district','District',D,'Districts');
+  populateSelect('tc-f-state','State',D,'States');
+  const fb=document.getElementById('tc-f-block').value, fd=document.getElementById('tc-f-district').value;
+  const fs=document.getElementById('tc-f-state').value, fq=(document.getElementById('tc-f-search').value||'').toLowerCase();
+  const rows=D.filter(r=>(!fb||r['Block']===fb)&&(!fd||r['District']===fd)&&(!fs||r['State']===fs));
+
+  const insightEl=document.getElementById('tc-insight');
+  const rejRows=rows.filter(r=>r['Rejection Reason']);
+  if(!rejRows.length){ insightEl.innerHTML=''; }
+  else{
+    const blockRank=rankBy(rejRows,r=>r['Block']);
+    const top=blockRank[0];
+    const pct=Math.round(top.count/rejRows.length*100);
+    insightEl.innerHTML=`<div class="insight-card">
+      <div class="insight-ico">!</div>
+      <div>
+        <div class="insight-label">Block With Most Rejections</div>
+        <div class="insight-val">${escHtml(top.label)} &mdash; ${top.count} rejection${top.count>1?'s':''}</div>
+        <div class="insight-sub">${pct}% of all rejections in the filtered view trace back to this block</div>
+      </div>
+    </div>`;
+  }
+
+  const tbody=document.getElementById('tc-table');
+  if(!rows.length){ tbody.innerHTML='<thead><tr><th>Telecaller</th></tr></thead><tbody><tr class="tbl-empty-row"><td>No records match the current filters.</td></tr></tbody>'; document.getElementById('tc-cards').innerHTML=''; return; }
+
+  let tcs=[...new Set(rows.map(r=>r['Telelcaller Name']).filter(Boolean))];
+  if(fq) tcs=tcs.filter(n=>n.toLowerCase().includes(fq));
+  let stats=tcs.map(name=>{
+    const trows=rows.filter(r=>r['Telelcaller Name']===name);
+    const total=trows.length,rejs=trows.filter(r=>r['Rejection Reason']).length;
+    const rep=trows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('redone')).length;
+    const rea=trows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('reassessment')).length;
+    const er=total?Math.round(rejs/total*100):0, share=rows.length?Math.round(total/rows.length*100):0;
+    const top=(trows.map(r=>r['Rejection Reason']).filter(Boolean)[0])||'--';
+    return {name,total,rejs,er,rep,rea,top,share,trows};
+  });
+  stats=sortRows(stats,TC_SORT.key,TC_SORT.dir,(s,k)=>s[k]);
+
+  tbody.innerHTML=`<thead><tr>
+    ${thSort('Telecaller','name','sortTcBy',TC_SORT)}
+    ${thSort('Forms','total','sortTcBy',TC_SORT)}
+    ${thSort('Rejections','rejs','sortTcBy',TC_SORT)}
+    ${thSort('Error Rate','er','sortTcBy',TC_SORT,'Should trend down as operator data quality improves over seasons.')}
+    ${thSort('Repeats','rep','sortTcBy',TC_SORT)}
+    ${thSort('Reassessments','rea','sortTcBy',TC_SORT)}
+    <th>Top Rejection</th>
+    ${thSort('Workload Share','share','sortTcBy',TC_SORT)}
+  </tr></thead><tbody>`+stats.map(s=>`<tr>
+    <td><div class="tdn">${av(s.name)}<span class="fw6">${escHtml(s.name)}</span></div></td>
+    <td class="mono">${s.total}</td><td class="mono" style="color:var(--red)">${s.rejs}</td>
+    <td class="mono" style="color:${s.er>=80?'var(--red)':'var(--amb)'}">${s.er}%</td>
+    <td class="mono">${s.rep}</td><td class="mono">${s.rea}</td>
+    <td style="font-size:11px;color:var(--sub)">${escHtml(s.top)}</td>
+    <td><div style="display:flex;align-items:center;gap:6px"><div class="mb"><div class="mf" style="width:${s.share}%"></div></div><span class="mono">${s.share}%</span></div></td>
+  </tr>`).join('')+'</tbody>';
+
+  document.getElementById('tc-cards').innerHTML=stats.map(s=>{
+    const catRank=rankBy(s.trows.filter(r=>r['Rejection Reason']),r=>classifyRejection(r['Rejection Reason'])||'Other');
+    const maxC=Math.max(...catRank.map(c=>c.count),1);
+    const renderCat=(c,i)=>`<div class="rank-row"><span class="rank-num">${i!==undefined?i+1:''}</span><span class="rank-label" title="${escHtml(c.label)}">${escHtml(c.label)}</span><div class="rank-bar-track"><div class="rank-bar-fill" style="width:${Math.round(c.count/maxC*100)}%;background:var(--red)"></div></div><span class="rank-count">${c.count}</span></div>`;
+    const renderCatIdx=(()=>{ let i=0; return (c)=>renderCat(c,i++); })();
+    return`<div class="card"><div class="chd"><div style="display:flex;align-items:center;gap:8px">${av(s.name)}<span class="ct">${escHtml(s.name)}</span></div><span class="cm">${s.total} form${s.total>1?'s':''}</span></div>
+      ${catRank.length?topNExpandable(catRank,3,renderCatIdx):'<div style="color:var(--mu);font-size:12px">No rejections.</div>'}
+    </div>`;
+  }).join('');
+
+  renderTaskComboIntelligence();
+}
+
+// =============================== OPERATORS ===============================
+let OP_SORT={key:'total',dir:'desc'};
+let SV_SORT={key:'total',dir:'desc'};
+function sortOpBy(key){ if(OP_SORT.key===key) OP_SORT.dir=OP_SORT.dir==='desc'?'asc':'desc'; else { OP_SORT.key=key; OP_SORT.dir='desc'; } renderOperators(); }
+function sortSvBy(key){ if(SV_SORT.key===key) SV_SORT.dir=SV_SORT.dir==='desc'?'asc':'desc'; else { SV_SORT.key=key; SV_SORT.dir='desc'; } renderOperators(); }
+
+function renderOperators(){
+  populateSelect('op-f-block','Block',D,'Blocks');
+  populateSelect('op-f-surveyor','Name of Surveyor',D,'Surveyors');
+  populateSelect('op-f-state','State',D,'States');
+  const fb=document.getElementById('op-f-block').value, fsv=document.getElementById('op-f-surveyor').value;
+  const fst=document.getElementById('op-f-state').value, fq=(document.getElementById('op-f-search').value||'').toLowerCase();
+  const rows=D.filter(r=>(!fb||r['Block']===fb)&&(!fsv||r['Name of Surveyor']===fsv)&&(!fst||r['State']===fst));
+
+  const opTbl=document.getElementById('op-tbl'), svTbl=document.getElementById('sv-tbl');
+  if(!rows.length){
+    opTbl.innerHTML='<tbody><tr class="tbl-empty-row"><td>No records match the current filters.</td></tr></tbody>';
+    svTbl.innerHTML='<tbody><tr class="tbl-empty-row"><td>No records match the current filters.</td></tr></tbody>';
+    return;
+  }
+
+  let ops=[...new Set(rows.map(r=>r['Operator Name']).filter(Boolean))];
+  if(fq) ops=ops.filter(n=>n.toLowerCase().includes(fq));
+  let opStats=ops.map(op=>{
+    const orows=rows.filter(r=>r['Operator Name']===op);
+    const total=orows.length,rejs=orows.filter(r=>r['Rejection Reason']).length;
+    const red=orows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('redone')).length;
+    const rwr=total?Math.round(red/total*100):0;
+    const blocks=[...new Set(orows.map(r=>r['Block']))].join(', ');
+    const svs=[...new Set(orows.map(r=>r['Name of Surveyor']))].join(', ');
+    const sts=[...new Set(orows.map(r=>r['State']))].join(', ');
+    const remarkRank=rankBy(orows.filter(r=>(r['Operator Remarks']||'').trim()),r=>(r['Operator Remarks']||'').trim());
+    return {op,total,rejs,rwr,blocks,svs,sts,remarkRank};
+  });
+  opStats=sortRows(opStats,OP_SORT.key,OP_SORT.dir,(s,k)=>s[k]);
+
+  opTbl.innerHTML=`<thead><tr>
+    ${thSort('Operator','op','sortOpBy',OP_SORT)}
+    ${thSort('Forms','total','sortOpBy',OP_SORT,"Farms where this operator uploaded field data for telecaller verification.")}
+    <th>Block(s)</th><th>Surveyor</th><th>States</th>
+    ${thSort('Rejections','rejs','sortOpBy',OP_SORT,"Rejections against this operator's uploads. May reflect farmer-side document gaps, not operator-only accountability.")}
+    ${thSort('Rework Rate','rwr','sortOpBy',OP_SORT,"Resubmission rate. High rates may indicate unclear collection protocols or quality standards.")}
+    <th>Top Remarks</th>
+  </tr></thead><tbody>`+opStats.map(s=>{
+    const renderRmk=(r,i)=>`<div class="rank-row"><span class="rank-num">${i+1}</span><span class="rank-label" title="${escHtml(r.label)}">${escHtml(r.label)}</span><span class="rank-count">${r.count}</span></div>`;
+    let ri=0; const renderRmkIdx=(r)=>renderRmk(r,ri++);
+    return`<tr><td><div class="tdn">${av(s.op)}<span class="fw6">${escHtml(s.op)}</span></div></td>
+    <td class="mono">${s.total}</td><td style="font-size:11px">${escHtml(s.blocks)}</td><td style="font-size:11px">${escHtml(s.svs)}</td><td style="font-size:11px">${escHtml(s.sts)}</td>
+    <td class="mono" style="color:var(--red)">${s.rejs}</td><td class="mono">${s.rwr}%</td>
+    <td style="min-width:170px">${s.remarkRank.length?topNExpandable(s.remarkRank,3,renderRmkIdx):'<span style="color:var(--mu);font-size:11px">--</span>'}</td>
+    </tr>`;
+  }).join('')+'</tbody>';
+
+  let svs=[...new Set(rows.map(r=>r['Name of Surveyor']).filter(Boolean))];
+  if(fq) svs=svs.filter(n=>n.toLowerCase().includes(fq));
+  let svStats=svs.map(sv=>{
+    const srows=rows.filter(r=>r['Name of Surveyor']===sv);
+    const opn=[...new Set(srows.map(r=>r['Operator Name']))].join(', ');
+    const ten=[...new Set(srows.map(r=>r['Name of Tenant']))].join(', ');
+    const blk=[...new Set(srows.map(r=>r['Block']))].join(', ');
+    const sts=[...new Set(srows.map(r=>r['State']))].join(', ');
+    const rejs=srows.filter(r=>r['Rejection Reason']).length;
+    return {sv,total:srows.length,opn,ten,blk,sts,rejs};
+  });
+  svStats=sortRows(svStats,SV_SORT.key,SV_SORT.dir,(s,k)=>s[k]);
+  svTbl.innerHTML=`<thead><tr>
+    ${thSort('Surveyor','sv','sortSvBy',SV_SORT)}
+    ${thSort('Farms','total','sortSvBy',SV_SORT,"Total farms under this surveyor's territory in the active dataset.")}
+    <th>Operators</th><th>Tenant</th><th>Blocks</th><th>States</th>
+    ${thSort('Rejections','rejs','sortSvBy',SV_SORT,"High counts warrant a territory-level review of field collection protocols.")}
+  </tr></thead><tbody>`+svStats.map(s=>`<tr><td><div class="tdn">${av(s.sv)}<span class="fw6">${escHtml(s.sv)}</span></div></td><td class="mono">${s.total}</td><td style="font-size:11px">${escHtml(s.opn)}</td><td style="font-size:11px">${escHtml(s.ten)}</td><td style="font-size:11px">${escHtml(s.blk)}</td><td style="font-size:11px">${escHtml(s.sts)}</td><td class="mono" style="color:var(--red)">${s.rejs}</td></tr>`).join('')+'</tbody>';
+}
+
+// =============================== REJECTION ANALYSIS ===============================
+const REJ_CAT={
+  'Photo / Identity Mismatch':{reasons:['photo mismatch'],ex:'Photos captured at different life stages. Operator must re-collect a fresh live photo at next field visit.'},
+  'Signature Mismatch':{reasons:['signature mismatch'],ex:'Variation between consent form and ID proof signatures. Possible proxy signing. Re-collect with both documents present.'},
+  'KML / Boundary Error':{reasons:['farm kml','crop kml'],ex:'Polygon does not align with satellite imagery, usually GPS drift during the boundary walk. Operator must re-walk the boundary.'},
+  'Activity Capture Issue':{reasons:['activity photo','activity video'],ex:'Media not timestamped or geotagged correctly. Operator needs re-training on live event capture protocol.'},
+  'Land Record Mismatch':{reasons:['land record'],ex:'Patta data conflicts with the state land records database. Original documents must be re-submitted and cross-verified.'},
+};
+function renderRejections(){
+  const counts={},reasonMap={};
+  D.forEach(r=>{
+    const cat=classifyRejection(r['Rejection Reason']);
+    if(cat&&cat!=='Other'){
+      counts[cat]=(counts[cat]||0)+1;
+      if(!reasonMap[cat])reasonMap[cat]=[];
+      if(!reasonMap[cat].includes(r['Rejection Reason']))reasonMap[cat].push(r['Rejection Reason']);
+    }
+  });
+  const rejGrid=document.getElementById('rej-grid');
+  if(!Object.keys(counts).length){ rejGrid.innerHTML='<div class="empty-banner" style="grid-column:1/-1">No rejections in the active dataset.</div>'; }
+  else{
+    rejGrid.innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([cat,n])=>{
+      const blockRank=rankBy(D.filter(r=>classifyRejection(r['Rejection Reason'])===cat),r=>r['Block']);
+      const renderBlk=(b,i)=>`<div class="rank-row"><span class="rank-num">${i+1}</span><span class="rank-label">${escHtml(b.label)}</span><span class="rank-count">${b.count}</span></div>`;
+      let bi=0; const renderBlkIdx=(b)=>renderBlk(b,bi++);
+      return`<div class="hc"><div class="hn">${cat}</div>
+      <div><span class="hnum">${n}</span> <span class="hpct">form${n>1?'s':''} (${Math.round(n/Math.max(D.length,1)*100)}% of active dataset)</span></div>
+      <div class="hrs">${(reasonMap[cat]||[]).map(r=>`<div class="hr">${escHtml(r)}</div>`).join('')}</div>
+      <div class="hex">Likely cause: ${REJ_CAT[cat]?.ex||''}</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);margin-top:10px;margin-bottom:4px">Top Blocks</div>
+      ${blockRank.length?topNExpandable(blockRank,3,renderBlkIdx):'<div style="font-size:11px;color:var(--mu)">No block data.</div>'}
+      </div>`;
+    }).join('');
+  }
+
+  populateSelect('rej-f-tc','Telelcaller Name',D,'Telecallers');
+  populateSelect('rej-f-op','Operator Name',D,'Operators');
+  populateSelect('rej-f-state','State',D,'States');
+  populateSelect('rej-f-district','District',D,'Districts');
+  populateSelect('rej-f-block','Block',D,'Blocks');
+  renderRejectionTables();
+}
+
+// =============================== TASK COMBINATION INTELLIGENCE (lives under Telecaller Performance) ===============================
+function renderTaskComboIntelligence(){
+  document.getElementById('tci-source-label').textContent = TASK_DATA_IS_SAMPLE ? '(showing sample template, self-scales once a real file is uploaded)' : `(live from uploaded data, ${TOTAL_COMBOS_CURRENT.toLocaleString()} combinations)`;
+
+  const catEntries=Object.entries(CAT_DATA).sort((a,b)=>b[1].count-a[1].count).slice(0,8);
+  const maxCnt=Math.max(...catEntries.map(e=>e[1].count),1);
+  document.getElementById('cat-dist-bars').innerHTML=catEntries.map(([cat,d])=>{
+    const w=Math.round(d.count/maxCnt*100),pct=(d.count/Math.max(TOTAL_COMBOS_CURRENT,1)*100).toFixed(1);
+    return`<div class="br"><div class="bl" title="${escHtml(cat)}" style="font-size:10px">${escHtml(cat.replace('Farmer','F.').replace('Practice','Pr.').replace('Crop','Cr.'))}</div><div class="bt"><div class="bf" style="width:${w}%;background:var(--gm)"><span class="bn">${pct}%</span></div></div><div class="bv">${d.count}</div></div>`;
+  }).join('') || '<div class="bar-empty">No category data.</div>';
+
+  const cmpx=Object.entries(CAT_DATA).sort((a,b)=>b[1].avg-a[1].avg).slice(0,8);
+  const maxAvg=Math.max(...cmpx.map(e=>e[1].avg),1);
+  document.getElementById('complexity-bars').innerHTML=cmpx.map(([cat,d])=>{
+    const w=Math.round(d.avg/maxAvg*100);
+    return`<div class="br"><div class="bl" title="${escHtml(cat)}" style="font-size:10px">${escHtml(cat.replace('Farmer','F.').replace('Practice','Pr.').replace('Crop','Cr.'))}</div><div class="bt"><div class="bf" style="width:${w}%;background:var(--bl)"><span class="bn">${d.avg}</span></div></div><div class="bv">${d.max}</div></div>`;
+  }).join('') || '<div class="bar-empty">No category data.</div>';
+
+  const modRej={'Farmer':0,'Farm':0,'Crop':0,'Practice':0};
+  D.forEach(r=>{
+    const rej=(r['Rejection Reason']||'').toLowerCase();
+    if(['photo mismatch','signature mismatch'].some(k=>rej.includes(k)))modRej['Farmer']++;
+    if(['farm kml','land record'].some(k=>rej.includes(k)))modRej['Farm']++;
+    if(['crop kml'].some(k=>rej.includes(k)))modRej['Crop']++;
+    if(['activity photo','activity video'].some(k=>rej.includes(k)))modRej['Practice']++;
+  });
+  const modMax=Math.max(...Object.values(modRej),1);
+  document.getElementById('module-rej-bars').innerHTML=Object.entries(modRej).map(([mod,n])=>{
+    const w=Math.round(n/modMax*100);
+    return`<div class="br"><div class="bl">${mod}</div><div class="bt"><div class="bf" style="width:${w}%;background:${MODULE_HEX[mod]}"><span class="bn">${n}</span></div></div><div class="bv">${n}</div></div>`;
+  }).join('');
+
+  document.getElementById('task-selector').innerHTML=TASK_COLS_CURRENT.map(col=>{
+    let mod='Other';
+    for(const[m,cols] of Object.entries(MODULE_MAP_CURRENT)){ if(cols.includes(col)){mod=m;break;} }
+    const cls=MODULE_COLOR_CLASS[mod]||'other';
+    const label=cleanTaskLabel(col);
+    return`<label><input type="checkbox" class="task-cb" value="${escHtml(col)}"><span class="tc-chip ${cls}">${escHtml(label)}</span></label>`;
+  }).join('');
+
+  const topTasks=Object.entries(TASK_FREQ_CURRENT).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  document.getElementById('auto-potential').innerHTML=`
+    <div style="font-size:12px;color:var(--sub);margin-bottom:10px">${TASK_DATA_IS_SAMPLE?'All 13 sample tasks appear in roughly half of all 8,191 combinations, indicating a balanced permutation structure.':'Ranked from the uploaded task segmentation file.'} Automation priority should follow rejection frequency, not task frequency alone.</div>
+    ${topTasks.map(([col,freq])=>{
+      const label=cleanTaskLabel(col);
+      const note=automationNote(label);
+      const pct=Math.round(freq/Math.max(TOTAL_COMBOS_CURRENT,1)*100);
+      return`<div style="background:var(--bg);border:1px solid var(--blt);border-radius:var(--r);padding:9px 11px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:12px;font-weight:600">${escHtml(label)}</span>
+          <span class="bdg bi" style="font-size:9px">${pct}% of combos</span>
+        </div>
+        <div style="font-size:11px;color:var(--mu)">${note}</div>
+      </div>`;
+    }).join('')}`;
+
+  updateLogSummary();
+}
+function renderRejectionTables(){
+  const ftc=document.getElementById('rej-f-tc').value, fop=document.getElementById('rej-f-op').value;
+  const fst=document.getElementById('rej-f-state').value, fdi=document.getElementById('rej-f-district').value;
+  const fbl=document.getElementById('rej-f-block').value, fq=(document.getElementById('rej-f-search').value||'').toLowerCase();
+  const rows=D.filter(r=>(!ftc||r['Telelcaller Name']===ftc)&&(!fop||r['Operator Name']===fop)&&(!fst||r['State']===fst)&&(!fdi||r['District']===fdi)&&(!fbl||r['Block']===fbl)&&(!fq||`${r['Farm ID']} ${r['Name of Farmer']}`.toLowerCase().includes(fq)));
+  const dsrBody=document.getElementById('dsr-body'), authBody=document.getElementById('auth-body');
+  if(!rows.length){
+    dsrBody.innerHTML='<tr class="tbl-empty-row"><td colspan="9">No records match the current filters.</td></tr>';
+    authBody.innerHTML='<tr class="tbl-empty-row"><td colspan="6">No records match the current filters.</td></tr>';
+    return;
+  }
+  dsrBody.innerHTML=rows.map(r=>`<tr onclick="openFarmModal(${r['Farm ID']})">
+    <td class="mono" style="color:var(--bl)">${r['Farm ID']}</td>
+    <td><div class="tdn">${av(r['Name of Farmer'],22)}<span>${escHtml((r['Name of Farmer']||'').trim())}</span></div></td>
+    <td>${escHtml(r['Telelcaller Name'])}</td><td>${escHtml(r['Operator Name'])}</td>
+    <td class="mono">${(r['DSR Operator Log Live Tracking %age C1']||0).toFixed(1)}%</td>
+    <td>${bdg(r['DSR Operator Log Live Tracking Status C1'])}</td>
+    <td class="mono">${(r['DSR GPS Device Log Live Tracking %age C1']||0).toFixed(1)}%</td>
+    <td>${bdg(r['DSR GPS Device Log Live Tracking Status C1'])}</td>
+    <td style="font-size:11px;color:var(--amb)">${escHtml(r['Rejection Reason'])||'--'}</td></tr>`).join('');
+  authBody.innerHTML=rows.map(r=>`<tr onclick="openFarmModal(${r['Farm ID']})">
+    <td class="mono" style="color:var(--bl)">${r['Farm ID']}</td>
+    <td><div class="tdn">${av(r['Name of Farmer'],22)}<span>${escHtml((r['Name of Farmer']||'').trim())}</span></div></td>
+    <td>${bdg(r['Farmer ID Proof Check'])}</td>
+    <td>${bdg(r['Land Record Check'])}</td>
+    <td>${bdg(r['Land Ownership Declaration Check'])}</td>
+    <td style="font-size:11px;color:var(--mu);max-width:200px;white-space:normal;line-height:1.4">${escHtml((r['Historical Crop Authentication']||'').split('|')[0].trim())}...</td></tr>`).join('');
+}
+function automationNote(taskName){
+  const t=(taskName||'').toLowerCase();
+  if(/kml|boundary/.test(t)) return 'Polygon boundary validation against satellite imagery. GIS automation candidate.';
+  if(/photo|picture|video/.test(t)) return 'Biometric or visual media match. ML/AI vision candidate.';
+  if(/signature/.test(t)) return 'Signature comparison via image analysis. ML candidate.';
+  if(/land|record/.test(t)) return 'Database cross-reference against state revenue records. API integration candidate.';
+  if(/mobile|call/.test(t)) return 'Automated voice or OTP based verification. IVR automation candidate.';
+  if(/consent|declaration|form/.test(t)) return 'Document field extraction and presence check. Rule-based OCR candidate.';
+  return 'Rule-based pattern matching against expected field values.';
+}
+
+// COMBO LOGGER
+function getSelectedTasks(){ return [...document.querySelectorAll('.task-cb:checked')].map(cb=>cb.value); }
+function getCategoryForTasks(tasks){
+  const mods=new Set();
+  tasks.forEach(t=>{ for(const[m,cols] of Object.entries(MODULE_MAP_CURRENT)){ if(cols.includes(t)){mods.add(m);break;} } });
+  if(!mods.size) return null;
+  const order=['Farmer','Farm','Crop','Practice','Other'];
+  const present=order.filter(m=>mods.has(m));
+  if(present.length===1) return present[0]+' Only';
+  return present.join(' + ');
+}
+function logCombo(){
+  const tasks=getSelectedTasks();
+  if(!tasks.length){ alert('Select at least one task.'); return; }
+  const cat=getCategoryForTasks(tasks)||'Unknown';
+  COMBO_LOG.unshift({tasks,cat,dt:new Date().toLocaleTimeString()});
+  renderComboLog(); updateLogSummary();
+  const el=document.getElementById('combo-result');
+  el.className='combo-result show';
+  el.textContent=`Category: ${cat} (${tasks.length} task${tasks.length>1?'s':''} selected)`;
+}
+function clearSel(){ document.querySelectorAll('.task-cb').forEach(cb=>cb.checked=false); document.getElementById('combo-result').className='combo-result'; }
+function clearLog(){ COMBO_LOG.length=0; renderComboLog(); updateLogSummary(); }
+function renderComboLog(){
+  document.getElementById('log-count-label').textContent=`${COMBO_LOG.length} entr${COMBO_LOG.length===1?'y':'ies'} logged`;
+  const el=document.getElementById('combo-log');
+  if(!COMBO_LOG.length){ el.innerHTML=''; return; }
+  el.innerHTML=COMBO_LOG.slice(0,10).map(e=>{
+    const chips=e.tasks.map(t=>{
+      let mod='Other';
+      for(const[m,cols] of Object.entries(MODULE_MAP_CURRENT)){ if(cols.includes(t)){mod=m;break;} }
+      return`<span class="tc-chip ${MODULE_COLOR_CLASS[mod]}" style="margin:1px">${escHtml(cleanTaskLabel(t))}</span>`;
+    }).join('');
+    return`<div class="log-entry"><div class="log-tasks">${chips}</div><div class="log-cat">${e.cat}</div><div class="log-dt">${e.dt}</div></div>`;
+  }).join('')+(COMBO_LOG.length>10?`<div style="font-size:11px;color:var(--mu);padding:6px">...and ${COMBO_LOG.length-10} more</div>`:'');
+}
+function updateLogSummary(){
+  const el=document.getElementById('log-summary');
+  if(!COMBO_LOG.length){ el.innerHTML='<div style="color:var(--mu);font-size:12px">No combinations logged yet. Use the logger above to begin tracking rework patterns.</div>'; return; }
+  const catC={}; COMBO_LOG.forEach(e=>{catC[e.cat]=(catC[e.cat]||0)+1});
+  const top=Object.entries(catC).sort((a,b)=>b[1]-a[1]);
+  const taskC={}; COMBO_LOG.forEach(e=>e.tasks.forEach(t=>{taskC[t]=(taskC[t]||0)+1}));
+  const topTask=Object.entries(taskC).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  el.innerHTML=`<div style="font-size:12px;font-weight:600;margin-bottom:8px">Most frequent rework category: <span style="color:var(--gm)">${top[0][0]}</span> (${top[0][1]} time${top[0][1]>1?'s':''})</div>
+    ${top.slice(0,4).map(([cat,n])=>`<div class="br"><div class="bl" style="font-size:10px">${escHtml(cat.replace('Farmer','F.').replace('Practice','Pr.'))}</div><div class="bt"><div class="bf" style="width:${Math.round(n/COMBO_LOG.length*100)}%;background:var(--gm)"><span class="bn">${Math.round(n/COMBO_LOG.length*100)}%</span></div></div><div class="bv">${n}</div></div>`).join('')}
+    <div style="margin-top:10px;font-size:11px;color:var(--sub)">Top recurring tasks: ${topTask.map(([t,n])=>`<strong>${escHtml(cleanTaskLabel(t))}</strong> (${n}x)`).join(', ')}</div>`;
+}
+
+// =============================== PRODUCTIVITY ===============================
+function renderProductivity(){
+  const cardsEl=document.getElementById('prod-cards');
+  if(!D.length){ cardsEl.innerHTML=''; return; }
+  const tcs=[...new Set(D.map(r=>r['Telelcaller Name']).filter(Boolean))];
+  const AVG=33.5;
+  cardsEl.innerHTML=tcs.map(name=>{
+    const rows=D.filter(r=>r['Telelcaller Name']===name);
+    const total=rows.length,rejs=rows.filter(r=>r['Rejection Reason']).length;
+    const red=rows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('redone')).length;
+    const bH=((total*AVG)/60).toFixed(1),rwH=((red*AVG)/60).toFixed(1),tH=(((total+red)*AVG)/60).toFixed(1);
+    const share=Math.round(total/D.length*100);
+    const wkH=(((total/Math.max(D.length/3,1))*5*AVG)/60).toFixed(1);
+    const qtH=Math.round(((total/Math.max(D.length/3,1))*65*AVG)/60);
+    return`<div class="pc"><div class="ph">${av(name,32)}<div><div class="pn">${escHtml(name)}</div><div class="pr">Telecaller / QA Associate</div></div></div>
+    <div class="pb">
+      <div class="prow"><span class="pl">Forms handled</span><div class="mb"><div class="mf" style="width:${share}%"></div></div><span class="pv">${total}</span></div>
+      <div class="prow"><span class="pl h" data-hint="Estimated from average task duration multiplied by forms handled.">Base hours</span><span class="pv">${bH} hr</span></div>
+      <div class="prow"><span class="pl">Rework hours</span><span class="pv" style="color:var(--amb)">${rwH} hr</span></div>
+      <div class="prow" style="border-top:1px solid var(--blt);padding-top:8px;margin-top:2px"><span class="pl" style="font-weight:700">Total est. hours</span><span class="pv" style="color:var(--gm)">${tH} hr</span></div>
+      <div class="prow"><span class="pl h" data-hint="Current daily rate extrapolated to 5 working days.">Weekly projection</span><span class="pv">${wkH} hr</span></div>
+      <div class="prow"><span class="pl h" data-hint="Current daily rate extrapolated to 65 working days.">Quarterly projection</span><span class="pv">${qtH} hr</span></div>
+      <div class="prow"><span class="pl">Rejection rate</span><span class="pv" style="color:var(--red)">${Math.round(rejs/total*100)}%</span></div>
+    </div></div>`;
+  }).join('');
+
+  const TIME_DATA=[
+    {sec:'Farmer Level',min:4,avg:5.5,max:7},
+    {task:'Profile Picture Check',min:0.5,avg:1,max:1.5},{task:'Mobile Number Check (call)',min:3,avg:4,max:5},{task:'Farmer ID Proof Check',min:0.5,avg:0.5,max:0.5},
+    {sec:'Farm Level',min:4.5,avg:9.75,max:15},
+    {task:'Land Record',min:2,avg:6,max:10},{task:'Land Ownership Declaration',min:1.5,avg:2.25,max:3},{task:'Farm KML',min:1,avg:1.5,max:2},
+    {sec:'Crop & Practice Level',min:2.5,avg:4,max:5.5},
+    {task:'Crop & Practice Data 2025',min:0.5,avg:0.5,max:0.5},{task:'Crop KML',min:1,avg:1.5,max:2},{task:'Sowing Picture',min:0.5,avg:1,max:1.5},{task:'Sowing Video',min:0.5,avg:1,max:1.5},
+    {sec:'GPS Intersection',min:1,avg:1.75,max:2.5},
+    {sec:'Pending Farmer & Crop Level',min:4,avg:4.25,max:9},
+    {task:'Consent Form',min:1.5,avg:2.25,max:3},{task:'Farmer Holding Consent Form',min:0.5,avg:1,max:1.5},{task:'Historical Crop Data 2022-24',min:1.5,avg:2.25,max:3},{task:'Follow-up Proofs',min:1,avg:1.5,max:2},
+  ];
+  let h='<thead><tr><th>Task</th><th>Min</th><th>Avg</th><th>Max</th></tr></thead><tbody>';
+  TIME_DATA.forEach(item=>{
+    if(item.sec)h+=`<tr><td colspan="4" class="tg">${item.sec}</td></tr>`;
+    else h+=`<tr><td style="padding-left:24px;font-size:11px">${item.task}</td><td class="mono">${item.min}</td><td class="mono" style="font-weight:700">${item.avg}</td><td class="mono">${item.max}</td></tr>`;
+  });
+  h+=`<tr style="background:var(--gl)"><td style="font-weight:700">Total per Farmer (min)</td><td class="mono" style="font-weight:700">20</td><td class="mono" style="font-weight:700">33.5</td><td class="mono" style="font-weight:700">47</td></tr></tbody>`;
+  document.getElementById('time-tbl').innerHTML=h;
+}
+
+// =============================== THROUGHPUT & BOTTLENECK TRACKING ===============================
+const TP_AVG_MIN_PER_FORM=33.5, TP_DAILY_CAP_MIN=480;
+let TP_VIEW='bytc';
+function switchTpView(el){
+  TP_VIEW=el.dataset.view;
+  document.querySelectorAll('#tp-view-switch .vs-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tp-view-bytc').style.display = TP_VIEW==='bytc' ? '' : 'none';
+  document.getElementById('tp-view-bycat').style.display = TP_VIEW==='bycat' ? '' : 'none';
+}
+function tpStatusChip(bucket){
+  const bg={unassigned:'#F3F4F6',idle:'var(--al)',ongoing:'var(--bll)',accepted:'var(--gl)',rejected:'var(--rl)',pendingver:'var(--al)'}[bucket.key]||'#F3F4F6';
+  return `<span class="tp-stat-chip" style="background:${bg};color:${bucket.color}">${bucket.label}</span>`;
+}
+function renderThroughput(){
+  if(!D.length){
+    document.getElementById('tp-kpi-strip').innerHTML='';
+    document.getElementById('tp-tc-cards').innerHTML=emptyBanner('No farm records in the active dataset.');
+    document.getElementById('tp-cat-cards').innerHTML='';
+    document.getElementById('tp-asof-banner').textContent='No activity data available yet.';
+    return;
+  }
+  const idleThreshold=+document.getElementById('tp-idle-threshold').value;
+  const asOf=computeAsOf(D);
+  document.getElementById('tp-asof-banner').innerHTML=`Live activity as of <strong>${fmtDate(asOf)}</strong>. A pre-acceptance task last touched within ${idleThreshold===0?'the same day':('the last '+idleThreshold+' day(s)')} of this date is treated as Ongoing (the telecaller is actively on it right now); anything older is Idle, regardless of when the file itself was last synced.`;
+
+  const annotated=D.map(r=>{
+    const lu=getLastUpdated(r);
+    const freshDays=asOf&&lu?daysBetween(lu,asOf):null;
+    const status=getTaskStatus(r);
+    let bucket;
+    if(/unassigned/i.test(status)) bucket={key:'unassigned',label:'Unassigned',color:'var(--mu)'};
+    else if(/rejected/i.test(status)) bucket={key:'rejected',label:'Complete - Rejected',color:'var(--red)'};
+    else if(/pending verification/i.test(status)) bucket={key:'pendingver',label:'Complete - Pending Verification',color:'var(--amb)'};
+    else if(/accepted/i.test(status)) bucket={key:'accepted',label:'Complete - Accepted',color:'var(--gm)'};
+    else{
+      const isFresh = freshDays!=null && freshDays<=idleThreshold;
+      bucket = isFresh ? {key:'ongoing',label:'Ongoing (Active Now)',color:'var(--bl)'} : {key:'idle',label:'Idle / Pending Acceptance',color:'var(--amb)'};
+    }
+    const cat=classifyRejection(r['Rejection Reason'])||'Other';
+    const expectedMin=CATEGORY_MEDIAN_MINUTES[cat]||CATEGORY_MEDIAN_MINUTES['Other'];
+    const elapsedDays=elapsedDaysForRow(r,asOf);
+    return {row:r,bucket,lu,freshDays,cat,expectedMin,elapsedDays};
+  });
+
+  // KPI strip
+  const bucketCounts={unassigned:0,ongoing:0,idle:0,accepted:0,rejected:0,pendingver:0};
+  annotated.forEach(a=>bucketCounts[a.bucket.key]++);
+  document.getElementById('tp-kpi-strip').innerHTML=[
+    ['Unassigned',bucketCounts.unassigned,'var(--mu)','Farm IDs with no telecaller or Date Assigned yet.'],
+    ['Ongoing (Active Now)',bucketCounts.ongoing,'var(--bl)','Pre-acceptance tasks last touched within the idle threshold of the most recent activity in the dataset.'],
+    ['Idle / Pending Acceptance',bucketCounts.idle,'var(--amb)','Pre-acceptance tasks with no recent activity. Likely candidates for a nudge or reassignment.'],
+    ['Complete - Pending Verification',bucketCounts.pendingver,'var(--amb)','Accepted by the telecaller, awaiting a manager or second-level verification pass.'],
+    ['Complete - Accepted',bucketCounts.accepted,'var(--gm)','Fully verified and accepted farm IDs.'],
+    ['Complete - Rejected',bucketCounts.rejected,'var(--red)','Fully verified and rejected farm IDs.'],
+  ].map(([label,val,color,hint])=>`<div class="kpi h" data-hint="${hint}">
+      <div class="kpi-v" style="color:${color};font-size:22px">${val}</div>
+      <div class="kpi-l">${label}</div>
+    </div>`).join('');
+
+  populateSelect('tp-f-tc','Telelcaller Name',D,'Telecallers');
+  const ftc=document.getElementById('tp-f-tc').value;
+  const fstatus=document.getElementById('tp-f-status').value;
+  let filtered=annotated.filter(a=>(!ftc||a.row['Telelcaller Name']===ftc)&&(!fstatus||a.bucket.key===fstatus));
+
+  // BY TELECALLER VIEW
+  const tcNames=[...new Set(D.map(r=>r['Telelcaller Name']).filter(Boolean))];
+  const tcCardsEl=document.getElementById('tp-tc-cards');
+  if(!tcNames.length){ tcCardsEl.innerHTML=emptyBanner('No telecallers found in the active dataset.'); }
+  else{
+    tcCardsEl.innerHTML=tcNames.filter(n=>!ftc||n===ftc).map(name=>{
+      const items=filtered.filter(a=>a.row['Telelcaller Name']===name);
+      if(!items.length && fstatus) return '';
+      const allItems=annotated.filter(a=>a.row['Telelcaller Name']===name);
+      const ongoingCt=allItems.filter(a=>a.bucket.key==='ongoing').length;
+      const idleCt=allItems.filter(a=>a.bucket.key==='idle').length;
+      const completeCt=allItems.filter(a=>['accepted','rejected','pendingver'].includes(a.bucket.key)).length;
+      const inQueue=ongoingCt+idleCt;
+      const capacityUsedPct=Math.min(100,Math.round((completeCt*TP_AVG_MIN_PER_FORM)/TP_DAILY_CAP_MIN*100));
+      const display=items.length?items:allItems;
+      const rid='tp-'+name.replace(/[^a-z0-9]/gi,'');
+      return `<div class="tp-card">
+        <div class="tp-hd" onclick="toggleExpand('${rid}',this.querySelector('.expand-toggle')||this)">
+          ${av(name,30)}
+          <div><div class="tp-name">${escHtml(name)}</div><div class="tp-meta">${allItems.length} assigned &middot; ${inQueue} in queue &middot; ~${capacityUsedPct}% of today's capacity used</div></div>
+          <div class="tp-statuses">
+            ${ongoingCt?`<span class="tp-stat-chip" style="background:var(--bll);color:var(--bl)">${ongoingCt} Active</span>`:''}
+            ${idleCt?`<span class="tp-stat-chip" style="background:var(--al);color:var(--amb)">${idleCt} Idle</span>`:''}
+            ${completeCt?`<span class="tp-stat-chip" style="background:var(--gl);color:var(--gm)">${completeCt} Complete</span>`:''}
+          </div>
+        </div>
+        <div class="tp-body" id="${rid}" style="display:none;padding-top:10px">
+          ${display.map(a=>{
+            const r=a.row;
+            const elapsedTxt=a.elapsedDays==null?'--':(a.elapsedDays===0?'Same day':a.elapsedDays+' day'+(a.elapsedDays>1?'s':''));
+            const bottleneck=a.elapsedDays!=null && a.elapsedDays>=2 && ['idle','ongoing'].includes(a.bucket.key);
+            return `<div class="tp-task-row" onclick="event.stopPropagation();openFarmModal(${r['Farm ID']})" style="cursor:pointer">
+              <span class="tp-task-id">#${r['Farm ID']}</span>
+              <span class="tp-task-status">${tpStatusChip(a.bucket)}</span>
+              <span style="font-size:11px;color:var(--sub)">${escHtml(a.cat)}</span>
+              <span class="tp-task-time">Median ~${a.expectedMin} min &middot; ${elapsedTxt} elapsed ${bottleneck?'<span class="bdg bm" style="margin-left:4px">Bottleneck</span>':''}</span>
+            </div>`;
+          }).join('') || '<div style="font-size:11px;color:var(--mu);padding:8px 0">No tasks match the current status filter.</div>'}
+        </div>
+      </div>`;
+    }).filter(Boolean).join('') || '<div class="empty-banner">No telecallers match the current filters.</div>';
+  }
+
+  // BY TASK COMBINATION VIEW
+  const catGroups={};
+  annotated.forEach(a=>{ if(!catGroups[a.cat]) catGroups[a.cat]=[]; catGroups[a.cat].push(a); });
+  const catCardsEl=document.getElementById('tp-cat-cards');
+  const catEntries=Object.entries(catGroups).filter(([,items])=>items.length);
+  if(!catEntries.length){ catCardsEl.innerHTML=emptyBanner('No categorized tasks in the active dataset.'); }
+  else{
+    catCardsEl.innerHTML=catEntries.sort((a,b)=>b[1].length-a[1].length).map(([cat,items])=>{
+      const tcs=[...new Set(items.map(a=>a.row['Telelcaller Name']).filter(Boolean))];
+      const expected=items[0].expectedMin;
+      const elapsedVals=items.map(a=>a.elapsedDays).filter(v=>v!=null).sort((x,y)=>x-y);
+      const medianElapsed=elapsedVals.length?elapsedVals[Math.floor(elapsedVals.length/2)]:null;
+      const isBottleneck=medianElapsed!=null && medianElapsed>=2;
+      const renderTask=(a,i)=>{
+        const r=a.row;
+        const elapsedTxt=a.elapsedDays==null?'--':(a.elapsedDays===0?'Same day':a.elapsedDays+' day'+(a.elapsedDays>1?'s':''));
+        return `<div class="tp-task-row" onclick="openFarmModal(${r['Farm ID']})" style="cursor:pointer">
+          <span class="tp-task-id">#${r['Farm ID']}</span>
+          <span style="font-size:11px;font-weight:600;width:90px;flex-shrink:0">${escHtml(r['Telelcaller Name']||'Unassigned')}</span>
+          <span class="tp-task-status">${tpStatusChip(a.bucket)}</span>
+          <span class="tp-task-time">${elapsedTxt} elapsed</span>
+        </div>`;
+      };
+      let ti=0; const renderTaskIdx=(a)=>renderTask(a,ti++);
+      return `<div class="tp-cat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:13px;font-weight:700">${escHtml(cat)}</div>
+            <div style="font-size:11px;color:var(--mu)">${items.length} farm ID${items.length>1?'s':''} &middot; ${tcs.length} telecaller${tcs.length>1?'s':''}: ${escHtml(joinTruncated(tcs))}</div>
+          </div>
+          <span class="bdg ${isBottleneck?'tp-bottleneck':'tp-on-pace'}" style="padding:4px 10px">${isBottleneck?'Bottleneck':'On Pace'}</span>
+        </div>
+        <div style="display:flex;gap:16px;margin-bottom:10px;font-size:11px;color:var(--sub)">
+          <span><strong>Median expected effort:</strong> ~${expected} min</span>
+          <span><strong>Median elapsed turnaround:</strong> ${medianElapsed==null?'--':medianElapsed+' day'+(medianElapsed>1?'s':'')}</span>
+        </div>
+        ${topNExpandable(items,3,renderTaskIdx)}
+      </div>`;
+    }).join('');
+  }
+}
+
+
+// =============================== SENTIMENT ===============================
+const RISK_MAP={'Farmer photo mismatch':{cat:'Identity',label:'Identity Risk',color:'var(--red)',note:'Photo discrepancy requires manager review before any eligibility decision.'},
+  'Signature mismatch':{cat:'Document',label:'Proxy Risk',color:'var(--amb)',note:'Signature variation may indicate proxy submission. Recommend in-person re-collection.'},
+  'Consent signature mismatch':{cat:'Document',label:'Proxy Risk',color:'var(--amb)',note:'Consent and ID proof signatures vary. Direct field re-verification needed.'},
+  'Incorrect farm KML':{cat:'Technical',label:'Technical Error',color:'var(--bl)',note:'GPS drift during boundary walk. Operator needs recalibration and re-walk.'},
+  'Incorrect crop KML':{cat:'Technical',label:'Technical Error',color:'var(--bl)',note:'Crop boundary incorrect. Operator training on KML collection resolves this.'},
+  'Incorrect activity photo':{cat:'Process',label:'Process Gap',color:'var(--bl)',note:'Activity photo does not meet timestamping or geotag standards.'},
+  'Incorrect activity video':{cat:'Process',label:'Process Gap',color:'var(--bl)',note:'Activity video not meeting live capture protocol. Operator re-training required.'},
+  'Land record mismatch':{cat:'Compliance',label:'Document Gap',color:'var(--red)',note:'Land record conflict with revenue database. Hard block for eligibility.'},
+};
+const REMARK_SIGNAL={'redone':{label:'Cooperative',color:'var(--gm)',note:'Operator resubmitted without dispute.'},
+  'photos taken at different ages':{label:'Flagged for Review',color:'var(--amb)',note:'Operator noted photo discrepancy. Fresh photo session needed.'},
+  'slight handwriting variation':{label:'Needs Verification',color:'var(--amb)',note:'Natural inconsistency possible. Recommend in-person check.'},
+  'requested reassessment':{label:'Disputed',color:'var(--red)',note:'Operator formally disputes the rejection. Manager review required.'},
+};
+function renderSentiment(){
+  populateSelect('sn-f-block','Block',D,'Blocks');
+  populateSelect('sn-f-district','District',D,'Districts');
+  const fb=document.getElementById('sn-f-block').value, fd=document.getElementById('sn-f-district').value;
+  const frisk=document.getElementById('sn-f-risk').value, fq=(document.getElementById('sn-f-search').value||'').toLowerCase();
+
+  const cardsEl=document.getElementById('sentiment-cards'), behEl=document.getElementById('op-beh');
+  let rows=D.filter(r=>(!fb||r['Block']===fb)&&(!fd||r['District']===fd)&&(!fq||`${r['Farm ID']} ${r['Name of Farmer']}`.toLowerCase().includes(fq)));
+  if(frisk){
+    rows=rows.filter(r=>{
+      const rk=Object.keys(RISK_MAP).find(k=>(r['Rejection Reason']||'').toLowerCase().includes(k.toLowerCase()));
+      return rk && RISK_MAP[rk].cat===frisk;
+    });
+  }
+  if(!D.length){ cardsEl.innerHTML=emptyBanner('No farm records in the active dataset.'); behEl.innerHTML=''; return; }
+  if(!rows.length){ cardsEl.innerHTML='<div class="empty-banner">No records match the current filters.</div>'; }
+  else{
+  cardsEl.innerHTML=rows.map(r=>{
+    const rej=(r['Rejection Reason']||'').toLowerCase();
+    const rk=Object.keys(RISK_MAP).find(k=>rej.includes(k.toLowerCase()))||'';
+    const risk=RISK_MAP[rk]||{cat:'Unknown',label:'Review',color:'var(--mu)',note:'No matched rejection category for this form.'};
+    const rmk=(r['Operator Remarks']||'').trim().toLowerCase();
+    const rsk=Object.keys(REMARK_SIGNAL).find(k=>rmk.includes(k))||'';
+    const rsig=REMARK_SIGNAL[rsk]||{label:'No Signal',color:'var(--mu)',note:'No operator remark recorded for this form.'};
+    const op=r['DSR Operator Log Live Tracking %age C1']||0,gps=r['DSR GPS Device Log Live Tracking %age C1']||0;
+    const dl=op>=50&&gps>=50?'Compliant':op>0||gps>0?'Partial':'Non-Compliant';
+    const dc=op>=50&&gps>=50?'var(--gm)':op>0||gps>0?'var(--amb)':'var(--red)';
+    const mc=['Farmer ID Proof Check','Land Record Check','Land Ownership Declaration Check','Farm KML Check','Consent Signature Check','Profile Picture Check'].filter(c=>(r[c]||'').toUpperCase()==='MISSING').length;
+    const rs=Math.round((6-mc)/6*100),rc=rs>=70?'var(--gm)':rs>=40?'var(--amb)':'var(--red)';
+    return`<div class="sc"><div class="sh"><div style="display:flex;align-items:center;gap:10px">${av(r['Name of Farmer'],32)}<div><div style="font-size:12px;font-weight:700">${escHtml((r['Name of Farmer']||'').trim())}</div><div style="font-size:11px;color:var(--mu)">${escHtml(r['Village'])}, ${escHtml(r['Block'])}, ${escHtml(r['District'])}, ${escHtml(r['State'])}</div></div></div><div style="display:flex;align-items:center;gap:8px"><span class="sfid">#${r['Farm ID']}</span><span style="font-size:11px;color:var(--sub)">TC: ${escHtml(r['Telelcaller Name'])}</span><span style="font-size:11px;color:var(--sub)">Op: ${escHtml(r['Operator Name'])}</span></div></div>
+    <div class="sbdy">
+      <div class="sm"><div class="sml h" data-hint="${risk.note}">Risk Signal</div><div class="ssig" style="color:${risk.color}"><span class="sdot" style="background:${risk.color}"></span>${risk.label}</div><div style="font-size:10px;color:var(--mu);margin-top:3px">${risk.cat} issue</div></div>
+      <div class="sm"><div class="sml h" data-hint="${rsig.note}">Operator Response</div><div class="ssig" style="color:${rsig.color}"><span class="sdot" style="background:${rsig.color}"></span>${rsig.label}</div><div style="font-size:10px;color:var(--mu);margin-top:3px">"${escHtml((r['Operator Remarks']||'').trim())}"</div></div>
+      <div class="sm"><div class="sml h" data-hint="Share of 6 primary check fields that are PENDING, meaning present but unverified, rather than MISSING.">Doc. Readiness</div><div class="ssig" style="color:${rc}"><span class="sdot" style="background:${rc}"></span>${rs}%</div><div style="font-size:10px;color:var(--mu);margin-top:3px">${mc} field${mc!==1?'s':''} missing</div></div>
+      <div class="sm"><div class="sml h" data-hint="Whether the sowing event was tracked by both operator log and GPS device. Non-compliant farms cannot have their DSR record validated.">DSR Compliance</div><div class="ssig" style="color:${dc}"><span class="sdot" style="background:${dc}"></span>${dl}</div><div style="font-size:10px;color:var(--mu);margin-top:3px">Op: ${op.toFixed(0)}% / GPS: ${gps.toFixed(0)}%</div></div>
+    </div></div>`;
+  }).join('');
+  }
+  const ops=[...new Set(D.map(r=>r['Operator Name']).filter(Boolean))];
+  behEl.innerHTML=ops.map(op=>{
+    const orows=D.filter(r=>r['Operator Name']===op);
+    const total=orows.length,red=orows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('redone')).length;
+    const dis=orows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('reassessment')).length;
+    const tech=orows.filter(r=>['kml','activity'].some(k=>(r['Rejection Reason']||'').toLowerCase().includes(k))).length;
+    const idr=orows.filter(r=>['photo','signature'].some(k=>(r['Rejection Reason']||'').toLowerCase().includes(k))).length;
+    return`<div class="card"><div class="chd"><div style="display:flex;align-items:center;gap:8px">${av(op)}<span class="ct">${escHtml(op)}</span></div><span class="cm">${total} forms</span></div>
+      <div class="prow"><span class="pl h" data-hint="Resubmitted without dispute. Higher is better.">Compliance rate</span><span class="pv" style="color:var(--gm)">${red}/${total}</span></div>
+      <div class="prow"><span class="pl">Disputes raised</span><span class="pv" style="color:${dis>0?'var(--red)':'var(--mu)'}">${dis}</span></div>
+      <div class="prow"><span class="pl">Technical errors</span><span class="pv" style="color:var(--bl)">${tech}</span></div>
+      <div class="prow"><span class="pl h" data-hint="Photo or signature rejections. Attribution is shared between operator and farmer-side documentation.">Identity/Doc errors</span><span class="pv" style="color:${idr>0?'var(--amb)':'var(--mu)'}">${idr}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// =============================== FARM RECORDS ===============================
+function populateFilters(){
+  populateSelect('f-tc','Telelcaller Name',D,'Telecallers');
+  populateSelect('f-op','Operator Name',D,'Operators');
+  populateSelect('f-sv','Name of Surveyor',D,'Surveyors');
+  populateSelect('f-st','State',D,'States');
+  populateSelect('f-di','District',D,'Districts');
+}
+function applyF(){
+  const tc=document.getElementById('f-tc').value,op=document.getElementById('f-op').value;
+  const sv=document.getElementById('f-sv').value,st=document.getElementById('f-st').value;
+  const di=document.getElementById('f-di').value,q=(document.getElementById('f-q').value||'').toLowerCase();
+  renderRecords(D.filter(r=>{
+    if(tc&&r['Telelcaller Name']!==tc)return false;
+    if(op&&r['Operator Name']!==op)return false;
+    if(sv&&r['Name of Surveyor']!==sv)return false;
+    if(st&&r['State']!==st)return false;
+    if(di&&r['District']!==di)return false;
+    if(q&&!`${r['Farm ID']} ${r['Name of Farmer']}`.toLowerCase().includes(q))return false;
+    return true;
+  }));
+}
+function renderRecords(rows){
+  const el=document.getElementById('rec-body');
+  if(!rows.length){ el.innerHTML='<tr class="tbl-empty-row"><td colspan="14">No matching records.</td></tr>'; return; }
+  el.innerHTML=rows.map(r=>{
+    const note=KMN[r['Farm ID']]||'';
+    return`<tr onclick="openFarmModal(${r['Farm ID']})"><td class="mono" style="color:var(--bl)">${r['Farm ID']}</td><td class="mono">${r['Farmer ID']}</td><td class="mono" style="color:var(--mu)">${r['Date of Onboarding']||'--'}</td><td><div class="tdn">${av(r['Name of Farmer'],22)}<span class="fw6">${escHtml((r['Name of Farmer']||'').trim())}</span></div></td><td>${escHtml(r['State'])}</td><td>${escHtml(r['District'])}</td><td>${escHtml(r['Block'])}</td><td>${escHtml(r['Telelcaller Name'])}</td><td>${escHtml(r['Operator Name'])}</td><td style="font-size:11px">${escHtml(r['Name of Surveyor'])}</td><td>${bdg(r['Final Status']||'')}</td><td style="font-size:11px;color:var(--amb)">${escHtml(r['Rejection Reason'])||'--'}</td><td style="font-size:11px;color:var(--sub)">${escHtml((r['Operator Remarks']||'').trim())||'--'}</td><td style="font-size:11px;color:var(--pu)">${note?escHtml(note.substring(0,28))+'...':'--'}</td></tr>`;
+  }).join('');
+}
+
+// =============================== REMARKS ===============================
+function renderRemarks(){
+  populateSelect('rm-f-block','Block',D,'Blocks');
+  populateSelect('rm-f-district','District',D,'Districts');
+  populateSelect('rm-f-tc','Telelcaller Name',D,'Telecallers');
+  populateSelect('rm-f-op','Operator Name',D,'Operators');
+  const fb=document.getElementById('rm-f-block').value, fd=document.getElementById('rm-f-district').value;
+  const ftc=document.getElementById('rm-f-tc').value, fop=document.getElementById('rm-f-op').value;
+  const fq=(document.getElementById('rm-f-search').value||'').toLowerCase();
+  const rows=D.filter(r=>(!fb||r['Block']===fb)&&(!fd||r['District']===fd)&&(!ftc||r['Telelcaller Name']===ftc)&&(!fop||r['Operator Name']===fop)&&(!fq||`${r['Farm ID']} ${r['Name of Farmer']}`.toLowerCase().includes(fq)));
+
+  const feedEl=document.getElementById('rmk-feed');
+  if(!D.length){ feedEl.innerHTML=emptyBanner('No farm records in the active dataset.'); renderKmList(); return; }
+  if(!rows.length){ feedEl.innerHTML='<div class="empty-banner">No records match the current filters.</div>'; renderKmList(); return; }
+  feedEl.innerHTML=rows.map(r=>`<div class="rmk"><div class="rmkm"><span class="rmkid">#${r['Farm ID']}</span><span class="bdg bi" style="font-size:10px">${escHtml(r['Telelcaller Name'])}</span><span style="font-size:11px;color:var(--sub)">Op: ${escHtml(r['Operator Name'])}</span><span style="font-size:11px;color:var(--sub)">Sv: ${escHtml(r['Name of Surveyor'])}</span><span class="rmkdt">${r['Date of Onboarding']||'--'}</span></div><div class="rmkr">${escHtml(r['Rejection Reason'])||'No rejection reason'}</div><div class="rmkb"><strong>Operator:</strong> ${escHtml((r['Operator Remarks']||'').trim())||'No remark'}</div><div style="font-size:11px;color:var(--mu);margin-top:4px">${escHtml(r['Village'])}, ${escHtml(r['Block'])}, ${escHtml(r['District'])}, ${escHtml(r['State'])}</div></div>`).join('');
+  renderKmList();
+}
+function renderKmList(){
+  const el=document.getElementById('km-list'),entries=Object.entries(KMN).filter(([,v])=>v);
+  if(!entries.length){ el.innerHTML='<div style="color:var(--mu);font-size:12px;padding:12px">No manager notes saved yet. Open any farm record to add a note.</div>'; return; }
+  el.innerHTML=entries.map(([fid,note])=>{ const r=D.find(x=>String(x['Farm ID'])===String(fid)); return`<div class="kmnote"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span class="mono" style="color:var(--pu);font-weight:700">#${fid}</span>${r?`<span style="font-size:11px;color:var(--sub)">${escHtml((r['Name of Farmer']||'').trim())}</span>`:''}</div><div style="font-size:12px">${escHtml(note)}</div></div>`}).join('');
+}
+</script>
+<script>
+// =============================== FARM MODAL ===============================
+function openFarmModal(farmId){
+  const r=D.find(x=>x['Farm ID']===farmId); if(!r) return;
+  document.getElementById('m-title').textContent=`Farm #${farmId} - ${(r['Name of Farmer']||'').trim()}`;
+  document.getElementById('m-sub').textContent=`${r['Village']}, ${r['Block']}, ${r['District']}, ${r['State']}  |  TC: ${r['Telelcaller Name']}  |  Operator: ${r['Operator Name']}  |  Surveyor: ${r['Name of Surveyor']}`;
+  const CC=['Profile Picture Check','Mobile Number Check','Farmer ID Proof Check','Consent Signature Check','Consent Form Check','Consent Holding Photo Check','Land Record Check','Land Ownership Declaration Check','Farm KML Check'];
+  const op=r['DSR Operator Log Live Tracking %age C1']||0,opS=r['DSR Operator Log Live Tracking Status C1'];
+  const gps=r['DSR GPS Device Log Live Tracking %age C1']||0,gpsS=r['DSR GPS Device Log Live Tracking Status C1'];
+  document.getElementById('m-body').innerHTML=`
+    <div class="mfg"><div class="mf"><div class="mfl">Date</div><div class="mfv">${r['Date of Onboarding']||'--'}</div></div><div class="mf"><div class="mfl">Farmer ID</div><div class="mfv mono">${r['Farmer ID']||'--'}</div></div><div class="mf"><div class="mfl">Ownership</div><div class="mfv">${escHtml(r['Farm Ownership Type'])||'--'}</div></div><div class="mf"><div class="mfl">Cal. Area</div><div class="mfv">${r['Cal. Farm Area (acres)']??'--'} ac</div></div><div class="mf"><div class="mfl">Sub. Area</div><div class="mfv">${r['Sub. Farm Area (acres)']??'--'} ac</div></div><div class="mf"><div class="mfl">Tenant</div><div class="mfv">${escHtml(r['Name of Tenant'])||'--'}</div></div></div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);margin-bottom:8px">Verification Checks</div>
+    <div class="ckg">${CC.map(c=>`<div class="ck ${scls(r[c])}"><div class="ckn">${c.replace(' Check','')}</div><div class="ckv">${r[c]||'--'}</div></div>`).join('')}</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);margin:14px 0 8px">DSR Tracking - Crop 1</div>
+    <div>${[['Operator Log',op,opS],['GPS Device Log',gps,gpsS]].map(([l,p,s])=>`<div class="dr"><span class="dl">${l} Coverage</span><div class="dtr"><div class="dfl" style="width:${p}%;background:${s==='Accepted'?'var(--gm)':'var(--red)'}"></div></div><span class="dv">${p.toFixed(1)}%</span><span class="db">${bdg(s)}</span></div>`).join('')}</div>
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mu);margin:14px 0 8px">Rejection and Feedback</div>
+    <div style="background:var(--rl);border:1px solid var(--rb);border-radius:var(--r);padding:12px 14px"><div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px">${escHtml(r['Rejection Reason'])||'No rejection reason'}</div><div style="font-size:12px;color:var(--sub)"><strong>Operator remark:</strong> ${escHtml((r['Operator Remarks']||'').trim())||'No remark'}</div></div>
+    <div class="kma"><div class="kmal">Manager Note for Farm #${farmId}</div><textarea class="kmta" id="km-ta-${farmId}" placeholder="Record assessment, escalation decision, or follow-up action...">${escHtml(KMN[farmId]||'')}</textarea><button class="btn btn-g btn-sm" style="margin-top:8px" onclick="saveNote(${farmId})">Save Note</button><span class="kmsv" id="km-sv-${farmId}">Saved</span></div>`;
+  openModal('farm-mov');
+}
+function saveNote(fid){ const el=document.getElementById(`km-ta-${fid}`); KMN[fid]=(el&&el.value||'').trim(); const sv=document.getElementById(`km-sv-${fid}`); sv.style.display='inline'; setTimeout(()=>{sv.style.display='none'},1800); applyF(); renderKmList(); }
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function openTimeModal(){ openModal('time-mov'); }
+
+// =============================== SHARED TOOLTIP ENGINE ===============================
+(function(){
+  const tip=document.getElementById('shared-tip');
+  function show(el){
+    if(!document.body.classList.contains('hints')) return;
+    const text=el.getAttribute('data-hint');
+    if(!text) return;
+    tip.textContent=text;
+    tip.style.left='-9999px'; tip.style.top='-9999px';
+    requestAnimationFrame(()=>{
+      const r=el.getBoundingClientRect();
+      const tw=tip.offsetWidth, th=tip.offsetHeight;
+      let left=r.left, top=r.top-th-8;
+      if(top<8) top=r.bottom+8;
+      const maxLeft=window.innerWidth-tw-8;
+      if(left>maxLeft) left=Math.max(8,maxLeft);
+      if(left<8) left=8;
+      const maxTop=window.innerHeight-th-8;
+      if(top>maxTop) top=maxTop;
+      if(top<8) top=8;
+      tip.style.left=left+'px'; tip.style.top=top+'px';
+      tip.classList.add('show');
+    });
+  }
+  function hide(){ tip.classList.remove('show'); }
+  document.addEventListener('mouseover',e=>{ const t=e.target.closest('[data-hint]'); if(t) show(t); });
+  document.addEventListener('mouseout',e=>{ const t=e.target.closest('[data-hint]'); if(t) hide(); });
+  document.addEventListener('scroll',hide,true);
+})();
+function toggleH(el){ const t=el.querySelector('.trk'); t.classList.toggle('on'); document.body.classList.toggle('hints',t.classList.contains('on')); }
+
+// =============================== REPORT GENERATOR ===============================
+function rpt_barTable(title,counts,colLabel){
+  const tot=Math.max(D.length,1);
+  const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  let h=`<div class="card rpt-card" style="margin-bottom:10px"><div class="ct" style="margin-bottom:10px">${title}</div><table class="tbl"><thead><tr><th>${colLabel}</th><th>Count</th><th>% of Total</th></tr></thead><tbody>`;
+  if(!rows.length) h+='<tr><td colspan="3" style="text-align:center;color:var(--mu)">No data</td></tr>';
+  rows.forEach(([l,n])=>{ h+=`<tr><td>${escHtml(l)}</td><td class="mono">${n}</td><td class="mono">${Math.round(n/tot*100)}%</td></tr>`; });
+  h+='</tbody></table></div>';
+  return h;
+}
+function rpt_overview(){
+  const k=computeKPIs();
+  let h='<div class="card rpt-card" style="margin-bottom:10px"><div class="ct" style="margin-bottom:10px">Key Indicators</div><table class="tbl"><tbody>';
+  h+=`<tr><td class="fw6">Forms in Queue</td><td class="mono">${k.total}</td></tr>`;
+  h+=`<tr><td class="fw6">Accepted</td><td class="mono">${k.accepted}</td></tr>`;
+  h+=`<tr><td class="fw6">Not Eligible / Rejected</td><td class="mono">${k.rejected} (${k.rejectedPct}%)</td></tr>`;
+  h+=`<tr><td class="fw6">Telecallers Active</td><td class="mono">${k.tcCount} - ${escHtml(k.tcNames)}</td></tr>`;
+  h+=`<tr><td class="fw6">Operators Active</td><td class="mono">${k.opCount} - ${escHtml(k.opNames)}</td></tr>`;
+  h+=`<tr><td class="fw6">Surveyors Mapped</td><td class="mono">${k.svCount}</td></tr>`;
+  h+=`<tr><td class="fw6">Rework / Redone</td><td class="mono">${k.redone} (${k.redonePct}%)</td></tr>`;
+  h+=`<tr><td class="fw6">Reassessments Disputed</td><td class="mono">${k.reassess}</td></tr>`;
+  h+=`<tr><td class="fw6">${escHtml(k.worstCheck)} Missing</td><td class="mono">${k.worstCheckCount}/${k.total} (${k.worstCheckPct}%)</td></tr>`;
+  h+='</tbody></table></div>';
+  h+=rpt_barTable('Top Rejection Reasons',cntBy('Rejection Reason'),'Reason');
+  h+=rpt_barTable('State Distribution',cntBy('State'),'State');
+  return h;
+}
+function rpt_telecaller(){
+  const tcs=[...new Set(D.map(r=>r['Telelcaller Name']).filter(Boolean))];
+  let h='<div class="card rpt-card"><div class="ct" style="margin-bottom:10px">Individual Verification Performance</div><table class="tbl"><thead><tr><th>Telecaller</th><th>Forms</th><th>Rejections</th><th>Error Rate</th><th>Repeats</th><th>Reassessments</th></tr></thead><tbody>';
+  if(!tcs.length) h+='<tr><td colspan="6" style="text-align:center;color:var(--mu)">No data</td></tr>';
+  tcs.forEach(name=>{
+    const rows=D.filter(r=>r['Telelcaller Name']===name);
+    const total=rows.length,rejs=rows.filter(r=>r['Rejection Reason']).length;
+    const rep=rows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('redone')).length;
+    const rea=rows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('reassessment')).length;
+    h+=`<tr><td class="fw6">${escHtml(name)}</td><td class="mono">${total}</td><td class="mono">${rejs}</td><td class="mono">${Math.round(rejs/total*100)}%</td><td class="mono">${rep}</td><td class="mono">${rea}</td></tr>`;
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+function rpt_operators(){
+  const ops=[...new Set(D.map(r=>r['Operator Name']).filter(Boolean))];
+  const svs=[...new Set(D.map(r=>r['Name of Surveyor']).filter(Boolean))];
+  let h='<div class="card rpt-card" style="margin-bottom:10px"><div class="ct" style="margin-bottom:10px">Operator Performance</div><table class="tbl"><thead><tr><th>Operator</th><th>Forms</th><th>Rejections</th><th>Rework Rate</th></tr></thead><tbody>';
+  if(!ops.length) h+='<tr><td colspan="4" style="text-align:center;color:var(--mu)">No data</td></tr>';
+  ops.forEach(op=>{
+    const rows=D.filter(r=>r['Operator Name']===op);
+    const total=rows.length,rejs=rows.filter(r=>r['Rejection Reason']).length;
+    const red=rows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('redone')).length;
+    h+=`<tr><td class="fw6">${escHtml(op)}</td><td class="mono">${total}</td><td class="mono">${rejs}</td><td class="mono">${Math.round(red/total*100)}%</td></tr>`;
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="card rpt-card"><div class="ct" style="margin-bottom:10px">Surveyor Coverage</div><table class="tbl"><thead><tr><th>Surveyor</th><th>Farms</th><th>Operators</th><th>Rejections</th></tr></thead><tbody>';
+  if(!svs.length) h+='<tr><td colspan="4" style="text-align:center;color:var(--mu)">No data</td></tr>';
+  svs.forEach(sv=>{
+    const rows=D.filter(r=>r['Name of Surveyor']===sv);
+    const opn=[...new Set(rows.map(r=>r['Operator Name']))].join(', ');
+    const rejs=rows.filter(r=>r['Rejection Reason']).length;
+    h+=`<tr><td class="fw6">${escHtml(sv)}</td><td class="mono">${rows.length}</td><td style="font-size:11px">${escHtml(opn)}</td><td class="mono">${rejs}</td></tr>`;
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+function rpt_rejections(){
+  const counts={};
+  D.forEach(r=>{
+    const rej=(r['Rejection Reason']||'').toLowerCase();
+    for(const[cat,d] of Object.entries(REJ_CAT)){ if(d.reasons.some(re=>rej.includes(re))){ counts[cat]=(counts[cat]||0)+1; } }
+  });
+  let h=rpt_barTable('Category Rejection Summary',counts,'Category');
+  const catRows=Object.entries(CAT_DATA).sort((a,b)=>b[1].count-a[1].count).slice(0,10);
+  h+='<div class="card rpt-card" style="margin-top:10px"><div class="ct" style="margin-bottom:10px">Task Combination Categories '+(TASK_DATA_IS_SAMPLE?'(sample template)':'(live data)')+'</div><table class="tbl"><thead><tr><th>Category</th><th>Combinations</th><th>Avg Tasks</th><th>Max Tasks</th></tr></thead><tbody>';
+  catRows.forEach(([cat,d])=>{ h+=`<tr><td>${escHtml(cat)}</td><td class="mono">${d.count}</td><td class="mono">${d.avg}</td><td class="mono">${d.max}</td></tr>`; });
+  h+='</tbody></table></div>';
+  return h;
+}
+function rpt_productivity(){
+  const tcs=[...new Set(D.map(r=>r['Telelcaller Name']).filter(Boolean))];
+  const AVG=33.5;
+  let h='<div class="card rpt-card"><div class="ct" style="margin-bottom:10px">Per-Telecaller Hours Estimate</div><table class="tbl"><thead><tr><th>Telecaller</th><th>Forms</th><th>Base Hours</th><th>Rework Hours</th><th>Total Hours</th></tr></thead><tbody>';
+  if(!tcs.length) h+='<tr><td colspan="5" style="text-align:center;color:var(--mu)">No data</td></tr>';
+  tcs.forEach(name=>{
+    const rows=D.filter(r=>r['Telelcaller Name']===name);
+    const total=rows.length;
+    const red=rows.filter(r=>(r['Operator Remarks']||'').toLowerCase().includes('redone')).length;
+    const bH=((total*AVG)/60).toFixed(1),rwH=((red*AVG)/60).toFixed(1),tH=(((total+red)*AVG)/60).toFixed(1);
+    h+=`<tr><td class="fw6">${escHtml(name)}</td><td class="mono">${total}</td><td class="mono">${bH}</td><td class="mono">${rwH}</td><td class="mono">${tH}</td></tr>`;
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+function rpt_sentiment(){
+  let h='<div class="card rpt-card"><div class="ct" style="margin-bottom:10px">Document Readiness and Behavioral Signals</div><table class="tbl"><thead><tr><th>Farm ID</th><th>Farmer</th><th>Risk Signal</th><th>Operator Response</th><th>Doc. Readiness</th><th>DSR Compliance</th></tr></thead><tbody>';
+  if(!D.length) h+='<tr><td colspan="6" style="text-align:center;color:var(--mu)">No data</td></tr>';
+  D.forEach(r=>{
+    const rej=(r['Rejection Reason']||'').toLowerCase();
+    const rk=Object.keys(RISK_MAP).find(k=>rej.includes(k.toLowerCase()))||'';
+    const risk=RISK_MAP[rk]||{label:'Review'};
+    const rmk=(r['Operator Remarks']||'').trim().toLowerCase();
+    const rsk=Object.keys(REMARK_SIGNAL).find(k=>rmk.includes(k))||'';
+    const rsig=REMARK_SIGNAL[rsk]||{label:'No Signal'};
+    const op=r['DSR Operator Log Live Tracking %age C1']||0,gps=r['DSR GPS Device Log Live Tracking %age C1']||0;
+    const dl=op>=50&&gps>=50?'Compliant':op>0||gps>0?'Partial':'Non-Compliant';
+    const mc=['Farmer ID Proof Check','Land Record Check','Land Ownership Declaration Check','Farm KML Check','Consent Signature Check','Profile Picture Check'].filter(c=>(r[c]||'').toUpperCase()==='MISSING').length;
+    const rs=Math.round((6-mc)/6*100);
+    h+=`<tr><td class="mono">${r['Farm ID']}</td><td>${escHtml((r['Name of Farmer']||'').trim())}</td><td>${risk.label}</td><td>${rsig.label}</td><td class="mono">${rs}%</td><td>${dl}</td></tr>`;
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+function rpt_records(){
+  let h='<div class="card rpt-card"><div class="ct" style="margin-bottom:10px">Farm Records (active dataset)</div><table class="tbl"><thead><tr><th>Farm ID</th><th>Farmer</th><th>State</th><th>District</th><th>Telecaller</th><th>Operator</th><th>Status</th><th>Rejection Reason</th></tr></thead><tbody>';
+  if(!D.length) h+='<tr><td colspan="8" style="text-align:center;color:var(--mu)">No data</td></tr>';
+  D.forEach(r=>{ h+=`<tr><td class="mono">${r['Farm ID']}</td><td>${escHtml((r['Name of Farmer']||'').trim())}</td><td>${escHtml(r['State'])}</td><td>${escHtml(r['District'])}</td><td>${escHtml(r['Telelcaller Name'])}</td><td>${escHtml(r['Operator Name'])}</td><td>${escHtml(r['Final Status'])||'--'}</td><td>${escHtml(r['Rejection Reason'])||'--'}</td></tr>`; });
+  h+='</tbody></table></div>';
+  return h;
+}
+function rpt_remarks(){
+  let h='<div class="card rpt-card"><div class="ct" style="margin-bottom:10px">Operator Remarks Feed</div><table class="tbl"><thead><tr><th>Farm ID</th><th>Telecaller</th><th>Operator</th><th>Rejection Reason</th><th>Operator Remark</th></tr></thead><tbody>';
+  if(!D.length) h+='<tr><td colspan="5" style="text-align:center;color:var(--mu)">No data</td></tr>';
+  D.forEach(r=>{ h+=`<tr><td class="mono">${r['Farm ID']}</td><td>${escHtml(r['Telelcaller Name'])}</td><td>${escHtml(r['Operator Name'])}</td><td>${escHtml(r['Rejection Reason'])||'--'}</td><td>${escHtml((r['Operator Remarks']||'').trim())||'--'}</td></tr>`; });
+  h+='</tbody></table></div>';
+  return h;
+}
+const RPT_BUILDERS={overview:rpt_overview,telecaller:rpt_telecaller,operators:rpt_operators,rejections:rpt_rejections,productivity:rpt_productivity,sentiment:rpt_sentiment,records:rpt_records,remarks:rpt_remarks};
+
+function getReportDataset(period){
+  return { rows: mergeFarmSources(s=>s.active&&(period==='All'||s.period===period)),
+           task: mergeTaskSources(s=>s.active&&(period==='All'||s.period===period)) };
+}
+function generateReport(){
+  const scope=document.getElementById('rpt-scope').value;
+  const period=document.getElementById('rpt-period').value;
+  const snap={D,CAT_DATA,TASK_COLS_CURRENT,TASK_FREQ_CURRENT,TOTAL_COMBOS_CURRENT,TASK_DATA_IS_SAMPLE,MODULE_MAP_CURRENT};
+  const {rows,task}=getReportDataset(period);
+  D=rows;
+  if(task){ recomputeTaskStats(task.rows,task.taskCols); TASK_DATA_IS_SAMPLE=false; }
+  else { resetTaskStatsToSample(); TASK_DATA_IS_SAMPLE=true; }
+
+  const sections = scope==='full' ? Object.keys(SECTION_LABELS) : [scope];
+  const generatedAt=new Date().toLocaleString();
+  const matchingSrc=SOURCES.filter(s=>period==='All'||s.period===period).map(s=>s.label);
+  let html=`<div class="rpt-head" style="margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid var(--gm)">
+    <div style="font-size:18px;font-weight:800;color:var(--gd)">QA | QC ${scope==='full'?'Full Overview':escHtml(SECTION_LABELS[scope])} Report</div>
+    <div style="font-size:11px;color:var(--mu);margin-top:6px">Period scope: ${period} &nbsp;|&nbsp; Generated: ${generatedAt} &nbsp;|&nbsp; Records included: ${D.length}</div>
+    <div style="font-size:11px;color:var(--mu);margin-top:2px">Sources: ${matchingSrc.length?escHtml(matchingSrc.join(', ')):'No sources match this period'}</div>
+  </div>`;
+  sections.forEach(s=>{
+    html+=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--mu);margin:18px 0 8px;border-bottom:1px solid var(--bdr);padding-bottom:6px">${escHtml(SECTION_LABELS[s])}</div>`;
+    html+=RPT_BUILDERS[s]?RPT_BUILDERS[s]():'';
+  });
+  document.getElementById('report-output').innerHTML=html;
+
+  D=snap.D; CAT_DATA=snap.CAT_DATA; TASK_COLS_CURRENT=snap.TASK_COLS_CURRENT; TASK_FREQ_CURRENT=snap.TASK_FREQ_CURRENT;
+  TOTAL_COMBOS_CURRENT=snap.TOTAL_COMBOS_CURRENT; TASK_DATA_IS_SAMPLE=snap.TASK_DATA_IS_SAMPLE; MODULE_MAP_CURRENT=snap.MODULE_MAP_CURRENT;
+}
+function openReportModal(){
+  if(!document.getElementById('rpt-scope').dataset.filled){
+    document.getElementById('rpt-scope').innerHTML='<option value="full">Full Overview (all sections)</option>'+Object.entries(SECTION_LABELS).map(([k,v])=>`<option value="${k}">${v} only</option>`).join('');
+    document.getElementById('rpt-period').innerHTML='<option value="All">All periods</option>'+PERIODS.map(p=>`<option value="${p}">${p}</option>`).join('');
+    document.getElementById('rpt-scope').dataset.filled='1';
+  }
+  openModal('report-mov');
+  generateReport();
+}
+function buildStandaloneReportDoc(){
+  const content=document.getElementById('report-output').innerHTML;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>QA QC Report</title><style>
+    body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#111827;padding:24px;max-width:900px;margin:0 auto}
+    table{width:100%;border-collapse:collapse;margin-bottom:4px}
+    th{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:#9CA3AF;text-align:left;padding:8px 10px;background:#FAFBFC;border-bottom:1px solid #E4E7EC}
+    td{padding:8px 10px;border-bottom:1px solid #F0F2F5;font-size:13px}
+    .fw6{font-weight:600} .mono{font-family:Menlo,Consolas,monospace;font-size:12px}
+    .card{border:1px solid #E4E7EC;border-radius:10px;padding:16px;margin-bottom:12px;page-break-inside:avoid}
+    .ct{font-size:13px;font-weight:700}
+    @media print{ @page{margin:14mm} body{padding:0;max-width:none} }
+  </style></head><body>${content}</body></html>`;
+}
+function printReport(){
+  const doc=buildStandaloneReportDoc();
+  const w=window.open('','_blank');
+  if(!w){ alert('Pop-up blocked. Allow pop-ups for this page, or use Download HTML instead.'); return; }
+  w.document.open();
+  w.document.write(doc);
+  w.document.close();
+  const tryPrint=()=>{ try{ w.focus(); w.print(); }catch(e){} };
+  w.onload=tryPrint;
+  setTimeout(tryPrint,400);
+}
+function downloadReportHtml(){
+  const doc=buildStandaloneReportDoc();
+  const blob=new Blob([doc],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='QAQC_Report_'+Date.now()+'.html';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+// =============================== NAV ===============================
+const RENDERERS={
+  datasources:renderSourcesPanel, overview:renderOverview, telecaller:renderTelecaller,
+  operators:renderOperators, rejections:renderRejections, productivity:renderProductivity,
+  throughput:renderThroughput,
+  sentiment:renderSentiment, records:()=>{populateFilters();applyF();}, remarks:renderRemarks
+};
+function nav(el){
+  document.querySelectorAll('.sbn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  const p=el.dataset.p;
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('on'));
+  document.getElementById('panel-'+p).classList.add('on');
+  if(!done[p]){ RENDERERS[p]&&RENDERERS[p](); done[p]=true; }
+}
+document.querySelectorAll('.mov').forEach(el=>el.addEventListener('click',e=>{ if(e.target===el) el.classList.remove('open'); }));
+
+// =============================== INIT ===============================
+wireDataSourceInputs();
+renderSourcesPanel();
+renderOverview();
+done.overview=true;
+document.getElementById('sync-label').textContent='Last sync: '+new Date().toLocaleString();
+</script>
+</body>
+</html>
