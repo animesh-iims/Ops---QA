@@ -8,7 +8,7 @@ Link to the sheet: https://docs.google.com/spreadsheets/d/1E44uTgvk_0h0k37MumWDH
 For implementing the script into a new sheet, script data and setup steps are available on the the same interface (as adding links / uploading files)
 
 
-
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 trial_4 (.xlsx) is a sample template of the file format supported by the Db tool
 I5 is the latest iteration, preceded by I4
